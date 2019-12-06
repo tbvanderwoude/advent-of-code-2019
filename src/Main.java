@@ -30,11 +30,11 @@ public class Main {
         return total;
     }
     public static void main(String[] args) {
-        BufferedReader reader;
-        Map<String, Node> nodes=new HashMap();
         try {
+            BufferedReader reader;
+            Map<String, Node> nodes=new HashMap();
             reader = new BufferedReader(new FileReader(
-                    "universe.txt"));
+                    "data/universe.txt"));
             String line = reader.readLine();
             while (line != null) {
                 String[] planets = line.split(Pattern.quote(")"));
@@ -56,50 +56,33 @@ public class Main {
             for (Map.Entry<String, Node> e : nodes.entrySet()) {
                 if (e.getValue().parent == null) {
                     root = e;
-                } else if (e.getValue().parent == null && root != null) {
-                    System.out.println("Something went wrong parsing");
+                    break;
                 }
             }
-            System.out.println("The root is now " + root.getKey());
             System.out.println(getOrbits(nodes.get("COM"), 0));
 
             Node santaOrbit = nodes.get("SAN").parent;
             Node myOrbit = nodes.get("YOU").parent;
-            if(santaOrbit==null||myOrbit==null)
-            {
-                System.out.println("Either orbit was null");
-            }
+
             //BFS TIME BABY
             Stack<Node> santaGraph=new Stack<>();
+            Stack<Node> myGraph=new Stack<>();
             Node n=santaOrbit;
             while(n!=null)
             {
                 santaGraph.push(n);
                 n=n.parent;
             }
-            Stack<Node> myGraph=new Stack<>();
             n=myOrbit;
             while(n!=null)
             {
                 myGraph.push(n);
                 n=n.parent;
             }
-            System.out.println(root.getKey()+" and "+santaGraph.peek().name);
-
             while(santaGraph.peek()==myGraph.peek())
             {
                 santaGraph.pop();
                 myGraph.pop();
-            }
-            Iterator<Node> value = myGraph.iterator();
-            System.out.println("The iterator values are: ");
-            while (value.hasNext()) {
-                System.out.println(value.next().name);
-            }
-            value = santaGraph.iterator();
-            System.out.println("The iterator values are: ");
-            while (value.hasNext()) {
-                System.out.println(value.next().name);
             }
             int dist = myGraph.size()+santaGraph.size();
             System.out.println(dist);

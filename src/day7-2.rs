@@ -6,7 +6,7 @@ use std::cmp::max;
 
 fn set_phase_of_program(phase:i32, mem: &mut Vec<i32>)
 {
-    let mut arg1:usize=mem[1] as usize;
+    let arg1:usize=mem[1] as usize;
     mem[arg1]=phase;
 }
 fn run_iter(mut input:i32, i: &mut usize, mem: &mut Vec<i32>) -> i32 {
@@ -15,7 +15,7 @@ fn run_iter(mut input:i32, i: &mut usize, mem: &mut Vec<i32>) -> i32 {
         let mut mode1:i32=0;
         let mut mode2:i32=0;
         let mut mode23:i32=0;
-        let mut strOp=mem[*i].to_string();
+        let strOp=mem[*i].to_string();
         let len=strOp.len();
         if len>=1
         {
@@ -57,16 +57,14 @@ fn run_iter(mut input:i32, i: &mut usize, mem: &mut Vec<i32>) -> i32 {
             },
             3|4 => {
                 let mut arg1:usize=mem[*i+1] as usize;
+                *i+=2;
                 if(opcode==3)
                 {
-                    *i+=2;
                     mem[arg1]=input;
                 }
                 if(opcode==4)
                 {
-                    *i+=2;
                     return mem[arg1];
-                    //println!("{}",mem[arg1])
                 }
             },
             5|6|7|8 =>
@@ -136,20 +134,23 @@ fn main() {
             programs.push(program.clone());
             set_phase_of_program(permutation[i],&mut programs[i]);
         }
+        let mut i:i32=0;
         while true
             {
-                current_output[0]=run_iter(current_output[4],&mut program_counters[0],&mut programs[0]);
-                current_output[1]=run_iter(current_output[0],&mut program_counters[1],&mut programs[1]);
-                current_output[2]=run_iter(current_output[1],&mut program_counters[2],&mut programs[2]);
-                current_output[3]=run_iter(current_output[2],&mut program_counters[3],&mut programs[3]);
-                let mut output:i32=run_iter(current_output[3],&mut program_counters[4],&mut programs[4]);
-                if(output==-99)
+                let mut previous: i32=((i-1) % 5);
+                if previous<0
+                {
+                    previous+=5;
+                }
+                let output=run_iter(current_output[previous as usize],&mut program_counters[i as usize],&mut programs[i as usize]);
+                if(output==-99&&i==4)
                 {
                     break;
                 }
                 else {
-                    current_output[4]=output;
+                    current_output[i as usize]=output;
                 }
+                i=(i+1)%5;
             }
         if current_output[4]>max_signal
         {

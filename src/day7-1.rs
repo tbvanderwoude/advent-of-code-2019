@@ -4,10 +4,6 @@ use permutohedron;
 use permutohedron::Heap;
 use std::cmp::max;
 
-fn set_phase_of_program(phase:i32, mem: &mut Vec<String>)
-{
-
-}
 fn run_str_program(mut inputs: (i32,i32), mem: &mut Vec<String>) -> i32 {
     let mut i:usize = 0;
     let mut inputJat=0;

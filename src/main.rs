@@ -4,86 +4,87 @@ use permutohedron;
 use permutohedron::Heap;
 use std::cmp::max;
 
-fn set_phase_of_program(phase:i32, mem: &mut Vec<String>)
+fn set_phase_of_program(phase:i32, mem: &mut Vec<i32>)
 {
-    let mut arg1:usize=mem[1].parse::<i32>().unwrap() as usize;
-    mem[arg1]=phase.to_string();
+    let mut arg1:usize=mem[1] as usize;
+    mem[arg1]=phase;
 }
-fn run_iter(mut input:i32, i: &mut usize, mem: &mut Vec<String>) -> i32 {
+fn run_iter(mut input:i32, i: &mut usize, mem: &mut Vec<i32>) -> i32 {
     while *i < mem.len() {
-        let len=mem[*i].len();
         let mut opcode:i32=0;
         let mut mode1:i32=0;
         let mut mode2:i32=0;
         let mut mode23:i32=0;
+        let mut strOp=mem[*i].to_string();
+        let len=strOp.len();
         if len>=1
         {
-            opcode=(mem[*i]).parse::<i32>().unwrap();
+            opcode=strOp.parse::<i32>().unwrap();
             if len>=3
             {
-                opcode=(&mem[*i][1..]).parse::<i32>().unwrap();
-                mode1=(&mem[*i][..1]).parse::<i32>().unwrap();
+                opcode=(strOp[1..]).parse::<i32>().unwrap();
+                mode1=(strOp[..1]).parse::<i32>().unwrap();
                 if len>=4
                 {
-                    opcode=(&mem[*i][2..]).parse::<i32>().unwrap();
-                    mode1=(&mem[*i][1..2]).parse::<i32>().unwrap();
-                    mode2=(&mem[*i][..1]).parse::<i32>().unwrap();
+                    opcode=(strOp[2..]).parse::<i32>().unwrap();
+                    mode1=(strOp[1..2]).parse::<i32>().unwrap();
+                    mode2=(strOp[..1]).parse::<i32>().unwrap();
                 }
             }
         }
         //println!("Opcode {0} (mode1 {1} mode2 {2})",opcode,mode1,mode2);
         match opcode {
             1|2 => {
-                let mut arg1:i32=mem[*i+1].parse::<i32>().unwrap();
-                let mut arg2:i32=mem[*i+2].parse::<i32>().unwrap();
+                let mut arg1:i32=mem[*i+1];
+                let mut arg2:i32=mem[*i+2];
                 if mode1==0
                 {
-                    arg1 = mem[arg1 as usize].parse::<i32>().unwrap();
+                    arg1 = mem[arg1 as usize];
                 }
                 if mode2==0
                 {
-                    arg2 = mem[arg2 as usize].parse::<i32>().unwrap();
+                    arg2 = mem[arg2 as usize];
                 }
-                let index:i32 = mem[*i+3].parse::<i32>().unwrap();
+                let index:i32 = mem[*i+3];
                 if opcode==1
                 {
-                    mem[index as usize]=(arg1+arg2).to_string();
+                    mem[index as usize]=(arg1+arg2);
                 }
                 else {
-                    mem[index as usize]=(arg1*arg2).to_string();
+                    mem[index as usize]=(arg1*arg2);
                 }
                 *i+=4;
             },
             3|4 => {
-                let mut arg1:usize=mem[*i+1].parse::<i32>().unwrap() as usize;
+                let mut arg1:usize=mem[*i+1] as usize;
                 if(opcode==3)
                 {
                     *i+=2;
-                    mem[arg1]=input.to_string();
+                    mem[arg1]=input;
                 }
                 if(opcode==4)
                 {
                     *i+=2;
-                    return mem[arg1].parse::<i32>().unwrap();
+                    return mem[arg1];
                     //println!("{}",mem[arg1])
                 }
             },
             5|6|7|8 =>
                 {
-                    let mut arg1:i32=mem[*i+1].parse::<i32>().unwrap();
-                    let mut arg2:i32=mem[*i+2].parse::<i32>().unwrap();
+                    let mut arg1:i32=mem[*i+1];
+                    let mut arg2:i32=mem[*i+2];
                     if mode1==0
                     {
-                        arg1 = mem[arg1 as usize].parse::<i32>().unwrap();
+                        arg1 = mem[arg1 as usize];
                     }
                     if mode2==0
                     {
-                        arg2 = mem[arg2 as usize].parse::<i32>().unwrap();
+                        arg2 = mem[arg2 as usize];
                     }
                     if(opcode==7||opcode==8)
                     {
-                        let index:i32 = mem[*i+3].parse::<i32>().unwrap();
-                        mem[index as usize]=((opcode==7&&arg1<arg2||opcode==8&&arg1==arg2)as i32).to_string();
+                        let index:i32 = mem[*i+3];
+                        mem[index as usize]=(opcode==7&&arg1<arg2||opcode==8&&arg1==arg2)as i32;
                         *i+=4;
                     }
                     else
@@ -113,10 +114,10 @@ fn main() {
     let contents = fs::read_to_string(filename)
         .expect("Something went wrong reading the file");
     let split = contents.split(",");
-    let mut program: Vec<String> = vec![];
+    let mut program: Vec<i32> = vec![];
 
     for s in split {
-        program.push(s.to_string());
+        program.push(s.to_string().parse::<i32>().unwrap());
     }
     let mut phases:Vec<i32> = vec![5,6,7,8,9];
     let heap = Heap::new(&mut phases);

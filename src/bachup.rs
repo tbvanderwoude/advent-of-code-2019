@@ -1,4 +1,18 @@
 
+fn fuel_cost(arg:i32, rec:bool)->i32 {
+    let fuel = arg/3-2;
+    if rec
+    {
+        if fuel<0
+        {
+            return 0;
+        }
+        return fuel+fuel_cost(fuel,rec);
+    }
+    else{
+        return fuel;
+    }
+}
 fn find_noun_verb(mem:Vec<i32>) -> i32 {
     for i in 0..100 {
         for j in 0..100
@@ -145,6 +159,42 @@ fn find_intersections(wires:Vec<Vec<Edge>>)->Vec<i32> {
     intersections.sort();
     return intersections;
 }
+fn validCode(x: &i32) ->bool {
+    let str=x.to_string();
+    let mut oldChar: char='q';
+    let mut hasPair=false;
+    let mut counts: i32=0;
+    for c in str.chars()  {
+        if(oldChar!='q')
+        {
+            if c.to_digit(10)<oldChar.to_digit(10)
+            {
+                return false;
+            }
+            if c==oldChar&&!hasPair
+            {
+                counts+=1;
+                print!("{0} has a pair", str);
+            }
+            else {
+                if(counts==1)
+                {
+                    hasPair=true;
+                }
+                counts=0;
+            }
+        }
+        oldChar=c;
+    }
+    if(counts==1)
+    {
+        hasPair=true;
+    }
+    println!(" and is monotonic");
+    //println!("{}",hasPair);
+    return hasPair;
+}
+
 
 fn run_str_program(mut mem:Vec<String>) {
     let mut i:usize = 0;

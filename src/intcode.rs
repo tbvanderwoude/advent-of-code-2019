@@ -15,6 +15,7 @@ pub fn load_program(filename: &String) -> Vec<i64>
     }
     return program;
 }
+
 pub fn run_int_code_from_here(i: &mut usize, mem: &mut Vec<i64>) -> i64 {
     let mut rel_base: i64 = 0;
     while *i < mem.len() {
@@ -22,13 +23,11 @@ pub fn run_int_code_from_here(i: &mut usize, mem: &mut Vec<i64>) -> i64 {
         let mut mode1: i64 = 0;
         let mut mode2: i64 = 0;
         let mut mode3: i64 = 0;
-        let mut arg1=0;
-        let mut arg2=0;
-        let mut arg3=0;
         //Todo: make this into a true Vec<i64> without optionals
         let mut chars: Vec<i64> = mem[*i].to_string().chars().map(|x| x.to_digit(10).unwrap() as i64).collect();
 
         let len = chars.len();
+
         if len >= 1
         {
             opcode = chars.pop().unwrap();
@@ -46,21 +45,11 @@ pub fn run_int_code_from_here(i: &mut usize, mem: &mut Vec<i64>) -> i64 {
                 }
             }
         }
-        if(opcode!=99)
-        {
-            arg1 = mem[*i + 1];
-            if(opcode!=9&&opcode!=3&&opcode!=4)
-            {
-                arg2 = mem[*i + 2];
-                if(opcode==1||opcode==2||opcode==7||opcode==8)
-                {
-                    arg3 = mem[*i + 3];
-                }
-            }
-        }
         //println!("Opcode {0} (mode1 {1} mode2 {2} mode3 {3} base {4})",opcode,mode1,mode2,mode3,rel_base);
         match opcode {
             1 | 2 => {
+                let mut arg1: i64 = mem[*i + 1];
+                let mut arg2: i64 = mem[*i + 2];
                 if mode1 == 0
                 {
                     arg1 = mem[arg1 as usize];
@@ -75,26 +64,29 @@ pub fn run_int_code_from_here(i: &mut usize, mem: &mut Vec<i64>) -> i64 {
                 {
                     arg2 = mem[(rel_base + arg2) as usize];
                 }
+                let index: i64 = mem[*i + 3];
                 if opcode == 1 {
                     if (mode3 == 2)
                     {
-                        mem[(rel_base + arg3) as usize] = (arg1 + arg2);
+                        mem[(rel_base + index) as usize] = (arg1 + arg2);
                     } else if mode3 == 0
                     {
-                        mem[arg3 as usize] = (arg1 + arg2);
+                        mem[index as usize] = (arg1 + arg2);
                     }
                 } else {
                     if (mode3 == 2)
                     {
-                        mem[(rel_base + arg3) as usize] = (arg1 * arg2);
+                        mem[(rel_base + index) as usize] = (arg1 * arg2);
                     } else if mode3 == 0
                     {
-                        mem[arg3 as usize] = (arg1 * arg2);
+                        mem[index as usize] = (arg1 * arg2);
                     }
                 }
                 *i += 4;
             }
             3 | 4 | 9 => {
+                let mut arg1: i64 = mem[*i + 1];
+
                 if (opcode == 9)
                 {
                     if mode1 == 0
@@ -104,7 +96,7 @@ pub fn run_int_code_from_here(i: &mut usize, mem: &mut Vec<i64>) -> i64 {
                     {
                         rel_base += mem[(rel_base + arg1) as usize];
                     } else {
-                        rel_base += arg1;
+                        rel_base = rel_base + arg1;
                     }
                 } else if (opcode == 3)
                 {
@@ -153,11 +145,12 @@ pub fn run_int_code_from_here(i: &mut usize, mem: &mut Vec<i64>) -> i64 {
 
                     if (opcode == 7 || opcode == 8)
                     {
+                        let index: i64 = mem[*i + 3];
                         if mode3 == 2
                         {
-                            mem[(arg3 + rel_base) as usize] = (opcode == 7 && arg1 < arg2 || opcode == 8 && arg1 == arg2) as i64;
+                            mem[(index + rel_base) as usize] = (opcode == 7 && arg1 < arg2 || opcode == 8 && arg1 == arg2) as i64;
                         } else {
-                            mem[arg3 as usize] = (opcode == 7 && arg1 < arg2 || opcode == 8 && arg1 == arg2) as i64;
+                            mem[index as usize] = (opcode == 7 && arg1 < arg2 || opcode == 8 && arg1 == arg2) as i64;
                         }
                         *i += 4;
                     } else {

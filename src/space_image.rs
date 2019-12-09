@@ -1,63 +1,47 @@
-< ? xml version="1.0" encoding="UTF-8" ? >
-< ! DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd" >
-< plist version="1.0" >
-< dict>
-< key>name< / key>
-< string>IR_Black< / string>
-< key>settings< / key>
-< array>
-< dict>
-< key>settings< / key>
-< dict>
-< key>background< / key>
-< string> # 000000 < / string>
-< key>caret< / key>
-< string> # FFFFFF< / string>
-< key>foreground< / key>
-< string> # EDEDED< / string>
-< key>invisibles< / key>
-< string> # CAE2FB3D< / string>
-< key>lineHighlight< / key>
-< string> # FFFFFF24< / string>
-< key>selection< / key>
-< string> # 333333 < / string>
-< / dict>
-< / dict>
-< dict>
-< key>name< / key>
-< string>Comment< / string>
-< key>scope< / key>
-< string>comment< / string>
-< key>settings< / key>
-< dict>
-< key>fontStyle< / key>
-< string> < / string>
-< key>foreground< / key>
-< string> # 7C7C7C < / string>
-< / dict>
-< / dict>
-< dict>
-< key>name< / key>
-< string>Entity< / string>
-< key>scope< / key>
-< string>entity< / string>
-< key>settings< / key>
-< dict>
-< key>fontStyle< / key>
-< string> < / string>
-< key>foreground< / key>
-< string> # FFD2A7< / string>
-< / dict>
-< / dict>
-< dict>
-< key>name< / key>
-< string>Keyword< / string>
-< key>scope< / key>
-< string>keyword< / string>
-< key>settings< / key>
-< dict>
-< key>fontStyle< / key>
-< string> < / string>
-< key>foreground< / key>
-< string> # 96CBFE < / string>
-< / di
+use std::fs;
+pub fn min_zero_code(layers: &Vec<String>) -> i32
+{
+    let mut min_layer:usize=0;
+    let mut min_zero:i32 = -1;
+    for (i, layer) in layers.iter().enumerate() {
+        let zero_count:i32 = layer.matches("0").count() as i32;
+        if zero_count<min_zero||min_zero==-1
+        {
+            min_layer=i;
+            min_zero=zero_count;
+        }
+    }
+    let one_count=layers[min_layer].matches("1").count();
+    let two_count=layers[min_layer].matches("2").count();
+    return (one_count*two_count) as i32;
+}
+pub fn load_image_layers(filename: &String) ->Vec<String>
+{
+
+    let mut contents = fs::read_to_string(filename)
+        .expect("Something went wrong reading the file");
+    let layer_size=25*6;
+    let mut layers: Vec<String> = vec![];
+    while !contents.is_empty() {
+        let (chunk, rest) = contents.split_at(std::cmp::min(layer_size, contents.len()));
+        layers.push(chunk.to_string());
+        contents = rest.to_string();
+    }
+    return layers;
+}
+pub fn render(layers: &Vec<String>)
+{
+    for y in 0..6 {
+        for x in 0..25 {
+            for layer in layers {
+                let char=layer.chars().nth(y*25+x).unwrap();
+                if(char!='2')
+                {
+                    print!("{}",char);
+                    break;
+                }
+            }
+        }
+        print!("\n");
+    }
+}

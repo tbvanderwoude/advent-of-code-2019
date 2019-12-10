@@ -1,68 +1,63 @@
-< ? xml version="1.0" encoding="UTF-8" ? >
-< ! DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd" >
-< plist version="1.0" >
-< dict>
-< key>name< / key>
-< string>Darcula< / string>
-< key>settings< / key>
-< array>
-< dict>
-< key>settings< / key>
-< dict>
-< key>background< / key>
-< string> # 2C2C2C < / string>
-< key>caret< / key>
-< string> # FFFFFF< / string>
-< key>foreground< / key>
-< string> # E6E1DC< / string>
-< key>invisibles< / key>
-< string> # 404040 < / string>
-< key>lineHighlight< / key>
-< string> # 333435 < / string>
-< key>selection< / key>
-< string> # 5A647EE0 < / string>
-< / dict>
-< / dict>
-< dict>
-< key>name< / key>
-< string>Source< / string>
-< key>scope< / key>
-< string>source< / string>
-< key>settings< / key>
-< dict>
-< key>background< / key>
-< string> # 2C2C2C < / string>
-< / dict>
-< / dict>
-< dict>
-< key>name< / key>
-< string>Comment< / string>
-< key>scope< / key>
-< string>comment< / string>
-< key>settings< / key>
-< dict>
-< key>fontStyle< / key>
-< string>italic< / string>
-< key>foreground< / key>
-< string> # BC9458< / string>
-< / dict>
-< / dict>
-< dict>
-< key>name< / key>
-< string>Keyword< / string>
-< key>scope< / key>
-< string>keyword, storage< / string>
-< key>settings< / key>
-< dict>
-< key>fontStyle< / key>
-< string> < / string>
-< key>foreground< / key>
-< string> # CC7833< / string>
-< / dict>
-< / dict>
-< dict>
-< key>name< / key>
-< string>Function (definition) < / string>
-< key>scope< / key>
-< string>entity.name.function, keyword.other.name-of-parameter.objc< / string>
-< key>
+use std::{env, fs};
+
+pub fn total_fuel(weights: &Vec<i32>, rec: bool) -> i32{
+    return weights.iter().map(|x| fuel_cost(x,rec)).fold(0, |a, b| a + b);
+}
+pub fn load_weights(filename: &String) ->Vec<i32> {
+    let contents = fs::read_to_string(filename)
+        .expect("Something went wrong reading the file");
+    let split=contents.split("\n");
+    let mut weights: Vec<i32> = vec![];
+    for s in split {
+        weights.push(s.to_string().parse::<i32>().unwrap());
+    }
+    return weights;
+}
+pub fn fuel_cost(arg: &i32, rec:bool)->i32 {
+    let fuel = arg/3-2;
+    if rec
+    {
+        if fuel<0
+        {
+            return 0;
+        }
+        return fuel+fuel_cost(&fuel,rec);
+    }
+    else{
+        return fuel;
+    }
+}
+pub fn valid_code(x: &i32) ->bool {
+    let str=x.to_string();
+    let mut old_char: char='q';
+    let mut has_pair =false;
+    let mut counts: i32=0;
+    for c in str.chars()  {
+        if old_char!='q'
+        {
+            if c.to_digit(10)<old_char.to_digit(10)
+            {
+                return false;
+            }
+            if c==old_char&&!has_pair
+            {
+                counts+=1;
+                print!("{0} has a pair", str);
+            }
+            else {
+                if(counts==1)
+                {
+                    has_pair =true;
+                }
+                counts=0;
+            }
+        }
+        old_char=c;
+    }
+    if(counts==1)
+    {
+        has_pair =true;
+    }
+    println!(" and is monotonic");
+    return has_pair;
+}

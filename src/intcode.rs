@@ -16,7 +16,7 @@ pub fn load_program(filename: &String) -> Vec<i64>
     return program;
 }
 
-pub fn run_int_code_from_here(i: &mut usize, mem: &mut Vec<i64>) -> i64 {
+pub fn run_int_code_from_here(i: &mut usize, mem: &mut Vec<i64>, inputFunc: &dyn Fn()->i64, outputFunc: &dyn Fn(i64)) -> i64{
     let mut rel_base: i64 = 0;
     while *i < mem.len() {
         let mut opcode: i64 = 0;
@@ -100,9 +100,7 @@ pub fn run_int_code_from_here(i: &mut usize, mem: &mut Vec<i64>) -> i64 {
                     }
                 } else if (opcode == 3)
                 {
-                    let mut ret = String::new();
-                    io::stdin().read_line(&mut ret).unwrap();
-                    let input: i64 = ret.trim().to_string().parse::<i64>().unwrap();
+                    let input: i64 = inputFunc();
                     if mode1 == 0
                     {
                         mem[arg1 as usize] = input;
@@ -119,7 +117,7 @@ pub fn run_int_code_from_here(i: &mut usize, mem: &mut Vec<i64>) -> i64 {
                     {
                         arg1 = mem[(rel_base + arg1) as usize];
                     }
-                    println!("{}", arg1);
+                    outputFunc(arg1);
                 }
                 *i += 2;
             }

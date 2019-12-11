@@ -1,5 +1,6 @@
 use std::io;
 use std::fs;
+use std::collections::HashMap;
 
 pub fn load_program(filename: &String) -> Vec<i64>
 {
@@ -10,13 +11,89 @@ pub fn load_program(filename: &String) -> Vec<i64>
     for s in split {
         program.push(s.to_string().parse::<i64>().unwrap());
     }
-    while (program.len() < 100000) {
+    while program.len() < 100000 {
         program.push(0);
     }
     return program;
 }
 
-pub fn run_int_code_from_here(i: &mut usize, mem: &mut Vec<i64>, inputFunc: &dyn Fn()->i64, outputFunc: &dyn Fn(i64)) -> i64{
+
+
+
+enum RobotDir
+{
+    UP=0,
+    RIGHT=1,
+    DOWN=2,
+    LEFT=3
+}
+pub struct DefaultComputer
+{
+
+}
+impl Computer for DefaultComputer
+{
+    fn input(&mut self) ->i64 {
+        let mut ret = String::new();
+        io::stdin().read_line(&mut ret).unwrap();
+        let input: i64 = ret.trim().to_string().parse::<i64>().unwrap();
+        return input;
+    }
+    fn output(&mut self,x:i64) {
+        println!("{}",x);
+    }
+}
+pub trait Computer {
+    fn input(&mut self) -> i64;
+    fn output(&mut self, x:i64);
+}
+pub struct Robot{
+    pub dir: i64,
+    pub map: HashMap<(i64,i64),i64>,
+    pub paint: bool,
+    pub x: i64,
+    pub y: i64
+}
+impl Computer for Robot{
+    fn input(&mut self) ->i64 {
+        if self.map.contains_key(&(self.x,self.y))
+        {
+            return *self.map.get(&(self.x,self.y)).unwrap();
+        }
+        else {
+            return 0;
+        }
+    }
+    fn output(&mut self,num:i64) {
+        if self.paint
+        {
+            self.map.insert((self.x,self.y),num);
+            self.paint=false;
+        }
+        else {
+            self.dir+=num*2-1;
+            if self.dir<0
+            {
+                self.dir+=4;
+            }
+            if self.dir>3
+            {
+                self.dir-=4;
+            }
+            match self.dir
+                {
+                    0 => self.y-=1,
+                    1 => self.x+=1,
+                    2 => self.y+=1,
+                    3 => self.x-=1,
+                    _ => ()
+                }
+            self.paint=true;
+        }
+    }
+}
+
+pub fn run_int_code_from_here_custom(i: &mut usize, mem: &mut Vec<i64>, robot: &mut Computer) -> i64{
     let mut rel_base: i64 = 0;
     while *i < mem.len() {
         let mut opcode: i64 = 0;
@@ -66,20 +143,20 @@ pub fn run_int_code_from_here(i: &mut usize, mem: &mut Vec<i64>, inputFunc: &dyn
                 }
                 let index: i64 = mem[*i + 3];
                 if opcode == 1 {
-                    if (mode3 == 2)
+                    if mode3 == 2
                     {
-                        mem[(rel_base + index) as usize] = (arg1 + arg2);
+                        mem[(rel_base + index) as usize] = arg1 + arg2;
                     } else if mode3 == 0
                     {
-                        mem[index as usize] = (arg1 + arg2);
+                        mem[index as usize] = arg1 + arg2;
                     }
                 } else {
-                    if (mode3 == 2)
+                    if mode3 == 2
                     {
-                        mem[(rel_base + index) as usize] = (arg1 * arg2);
+                        mem[(rel_base + index) as usize] = arg1 * arg2;
                     } else if mode3 == 0
                     {
-                        mem[index as usize] = (arg1 * arg2);
+                        mem[index as usize] = arg1 * arg2;
                     }
                 }
                 *i += 4;
@@ -87,7 +164,7 @@ pub fn run_int_code_from_here(i: &mut usize, mem: &mut Vec<i64>, inputFunc: &dyn
             3 | 4 | 9 => {
                 let mut arg1: i64 = mem[*i + 1];
 
-                if (opcode == 9)
+                if opcode == 9
                 {
                     if mode1 == 0
                     {
@@ -98,9 +175,9 @@ pub fn run_int_code_from_here(i: &mut usize, mem: &mut Vec<i64>, inputFunc: &dyn
                     } else {
                         rel_base = rel_base + arg1;
                     }
-                } else if (opcode == 3)
+                } else if opcode == 3
                 {
-                    let input: i64 = inputFunc();
+                    let input: i64 = robot.input();
                     if mode1 == 0
                     {
                         mem[arg1 as usize] = input;
@@ -108,7 +185,7 @@ pub fn run_int_code_from_here(i: &mut usize, mem: &mut Vec<i64>, inputFunc: &dyn
                     {
                         mem[(rel_base + arg1) as usize] = input;
                     }
-                } else if (opcode == 4)
+                } else if opcode == 4
                 {
                     if mode1 == 0
                     {
@@ -117,7 +194,7 @@ pub fn run_int_code_from_here(i: &mut usize, mem: &mut Vec<i64>, inputFunc: &dyn
                     {
                         arg1 = mem[(rel_base + arg1) as usize];
                     }
-                    outputFunc(arg1);
+                    &robot.output(arg1);
                 }
                 *i += 2;
             }
@@ -141,7 +218,7 @@ pub fn run_int_code_from_here(i: &mut usize, mem: &mut Vec<i64>, inputFunc: &dyn
                         arg2 = mem[(arg2 + rel_base) as usize];
                     }
 
-                    if (opcode == 7 || opcode == 8)
+                    if opcode == 7 || opcode == 8
                     {
                         let index: i64 = mem[*i + 3];
                         if mode3 == 2
@@ -152,7 +229,7 @@ pub fn run_int_code_from_here(i: &mut usize, mem: &mut Vec<i64>, inputFunc: &dyn
                         }
                         *i += 4;
                     } else {
-                        if (opcode == 5 && arg1 != 0 || opcode == 6 && arg1 == 0)
+                        if opcode == 5 && arg1 != 0 || opcode == 6 && arg1 == 0
                         {
                             *i = arg2 as usize;
                         } else {

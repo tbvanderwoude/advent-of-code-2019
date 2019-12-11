@@ -24,10 +24,10 @@ impl Computer for Robot{
         }
         if color==1
         {
-            //println!("It is white at ({0}, {1})",self.x,self.y);
+            println!("It is white at ({0}, {1})",self.x,self.y);
         }
         else {
-            //rprintln!("It is black at ({0}, {1})",self.x,self.y);
+            println!("It is black at ({0}, {1})",self.x,self.y);
         }
         return color;
     }
@@ -54,6 +54,7 @@ impl Computer for Robot{
             {
                 self.dir-=4;
             }
+            println!("Dir: {0}",self.dir);
             match self.dir
                 {
                     0 => {self.y-=1; println!("Moved up")},

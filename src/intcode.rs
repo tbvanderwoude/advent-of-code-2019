@@ -11,7 +11,7 @@ pub fn load_program(filename: &String) -> Vec<i64>
     for s in split {
         program.push(s.to_string().parse::<i64>().unwrap());
     }
-    while program.len() < 100000 {
+    while program.len() < 1000000 {
         program.push(0);
     }
     return program;
@@ -20,16 +20,8 @@ pub fn load_program(filename: &String) -> Vec<i64>
 
 
 
-enum RobotDir
-{
-    UP=0,
-    RIGHT=1,
-    DOWN=2,
-    LEFT=3
-}
 pub struct DefaultComputer
 {
-
 }
 impl Computer for DefaultComputer
 {
@@ -47,53 +39,7 @@ pub trait Computer {
     fn input(&mut self) -> i64;
     fn output(&mut self, x:i64);
 }
-pub struct Robot{
-    pub dir: i64,
-    pub map: HashMap<(i64,i64),i64>,
-    pub paint: bool,
-    pub x: i64,
-    pub y: i64
-}
-impl Computer for Robot{
-    fn input(&mut self) ->i64 {
-        if self.map.contains_key(&(self.x,self.y))
-        {
-            return *self.map.get(&(self.x,self.y)).unwrap();
-        }
-        else {
-            return 0;
-        }
-    }
-    fn output(&mut self,num:i64) {
-        if self.paint
-        {
-            self.map.insert((self.x,self.y),num);
-            self.paint=false;
-        }
-        else {
-            self.dir+=num*2-1;
-            if self.dir<0
-            {
-                self.dir+=4;
-            }
-            if self.dir>3
-            {
-                self.dir-=4;
-            }
-            match self.dir
-                {
-                    0 => self.y-=1,
-                    1 => self.x+=1,
-                    2 => self.y+=1,
-                    3 => self.x-=1,
-                    _ => ()
-                }
-            self.paint=true;
-        }
-    }
-}
-
-pub fn run_int_code_from_here_custom(i: &mut usize, mem: &mut Vec<i64>, robot: &mut Computer) -> i64{
+pub fn run_int_code_on_computer(i: &mut usize, mem: &mut Vec<i64>, robot: &mut Computer) -> i64{
     let mut rel_base: i64 = 0;
     while *i < mem.len() {
         let mut opcode: i64 = 0;

@@ -12,12 +12,8 @@ fn main() {
     {
         return;
     }
+    env::set_var("RUST_BACKTRACE","1");
     let filename=&args[1];
     let mut program=intcode::load_program(filename);
-    let mut counter: usize = 0;
-    let mut robot: robot::Robot = robot::Robot{map: HashMap::new(),dir: 0,paint:true,x:0,y:0};
-    let mut computer: intcode::DefaultComputer = intcode::DefaultComputer{};
-    println!("{}",intcode::run_int_code_on_computer(&mut counter,&mut program, &mut robot));
-    //println!("{}",robot.map.len());
-    //Insight: order does not matter until the last one.
+    robot::paint_using_robot(program);
 }

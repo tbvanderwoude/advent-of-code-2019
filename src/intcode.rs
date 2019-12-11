@@ -1,6 +1,7 @@
 use std::io;
 use std::fs;
 use std::collections::HashMap;
+use std::io::BufRead;
 
 pub fn load_program(filename: &String) -> Vec<i64>
 {
@@ -27,9 +28,15 @@ impl Computer for DefaultComputer
 {
     fn input(&mut self) ->i64 {
         let mut ret = String::new();
-        io::stdin().read_line(&mut ret).unwrap();
-        let input: i64 = ret.trim().to_string().parse::<i64>().unwrap();
-        return input;
+        match io::stdin().read_line(&mut ret) {
+            Ok(n) => {
+                match ret.trim().to_string().parse::<i64>() {
+                    Ok(n) => return n,
+                    Err(e) => return 0,
+                }
+            }
+            Err(error) => return 0,
+        }
     }
     fn output(&mut self,x:i64) {
         println!("{}",x);
@@ -39,7 +46,7 @@ pub trait Computer {
     fn input(&mut self) -> i64;
     fn output(&mut self, x:i64);
 }
-pub fn run_int_code_on_computer(i: &mut usize, mem: &mut Vec<i64>, robot: &mut Computer) -> i64{
+pub fn run_int_code_on_computer(i: &mut usize, mem: &mut Vec<i64>, robot: &mut Computer, printDebug:bool) -> i64{
     let mut rel_base: i64 = 0;
     while *i < mem.len() {
         let mut opcode: i64 = 0;
@@ -47,8 +54,17 @@ pub fn run_int_code_on_computer(i: &mut usize, mem: &mut Vec<i64>, robot: &mut C
         let mut mode2: i64 = 0;
         let mut mode3: i64 = 0;
         //Todo: make this into a true Vec<i64> without optionals
-        let mut chars: Vec<i64> = mem[*i].to_string().chars().map(|x| x.to_digit(10).unwrap() as i64).collect();
-
+        if mem[*i]==99
+        {
+            break;
+        }
+        let mut chars: Vec<i64> = mem[*i].to_string().chars().map(|x| match x.to_digit(10)
+            {
+                Some(d) => return d as i64,
+                None=> return 0,
+                _ => return 0
+            }
+        ).collect();
         let len = chars.len();
 
         if len >= 1
@@ -68,7 +84,10 @@ pub fn run_int_code_on_computer(i: &mut usize, mem: &mut Vec<i64>, robot: &mut C
                 }
             }
         }
-        //println!("Opcode {0} (mode1 {1} mode2 {2} mode3 {3} base {4})",opcode,mode1,mode2,mode3,rel_base);
+        if printDebug{
+            println!("Opcode {0} (mode1 {1} mode2 {2} mode3 {3} base {4})",opcode,mode1,mode2,mode3,rel_base);
+        }
+
         match opcode {
             1 | 2 => {
                 let mut arg1: i64 = mem[*i + 1];
@@ -121,7 +140,8 @@ pub fn run_int_code_on_computer(i: &mut usize, mem: &mut Vec<i64>, robot: &mut C
                     } else {
                         rel_base = rel_base + arg1;
                     }
-                } else if opcode == 3
+                }
+                else if opcode == 3
                 {
                     let input: i64 = robot.input();
                     if mode1 == 0
@@ -131,7 +151,8 @@ pub fn run_int_code_on_computer(i: &mut usize, mem: &mut Vec<i64>, robot: &mut C
                     {
                         mem[(rel_base + arg1) as usize] = input;
                     }
-                } else if opcode == 4
+                }
+                else if opcode == 4
                 {
                     if mode1 == 0
                     {

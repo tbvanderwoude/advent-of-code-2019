@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use crate::intcode::Computer;
+use crate::intcode;
 
 enum RobotDir
 {
@@ -14,6 +15,26 @@ pub struct Robot{
     pub paint: bool,
     pub x: i64,
     pub y: i64
+}
+pub fn paint_using_robot(mut program:Vec<i64>)
+{
+    let mut counter: usize = 0;
+    let mut robot: Robot = Robot{map: HashMap::new(),dir: 0,paint:true,x:0,y:0};
+    robot.map.insert((0,0),1);
+    println!("{}",intcode::run_int_code_on_computer(&mut counter,&mut program, &mut robot, false));
+    println!("{}",robot.map.len());
+    for y in 0..100 {
+        for x in 0..50 {
+            if robot.map.contains_key(&(x,y))&&*robot.map.get(&(x,y)).unwrap()==1
+            {
+                print!("0");
+            }
+            else {
+                print!(" ");
+            }
+        }
+        print!("\n");
+    }
 }
 impl Computer for Robot{
     fn input(&mut self) ->i64 {
@@ -54,15 +75,16 @@ impl Computer for Robot{
             {
                 self.dir-=4;
             }
-            println!("Dir: {0}",self.dir);
+            let mut strDir="up";
             match self.dir
                 {
-                    0 => {self.y-=1; println!("Moved up")},
-                    1 => {self.x+=1; println!("Moved right")},
-                    2 => {self.y+=1; println!("Moved down")},
-                    3 => {self.x-=1; println!("Moved left")},
+                    0 => {self.y-=1},
+                    1 => {self.x+=1; strDir="right";},
+                    2 => {self.y+=1; strDir="down";},
+                    3 => {self.x-=1; strDir="left";},
                     _ => ()
                 }
+            //println!("Moved {0}",strDir);
             self.paint=true;
         }
     }

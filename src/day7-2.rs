@@ -1,8 +1,8 @@
-use std::{env, io};
-use std::fs;
 use permutohedron;
 use permutohedron::Heap;
+use std::{env, io};
 use std::cmp::max;
+use std::fs;
 
 fn set_phase_of_program(phase: i32, mem: &mut Vec<i32>)
 {

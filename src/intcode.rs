@@ -21,9 +21,7 @@ pub fn load_program(filename: &String) -> Vec<i64>
 
 
 
-pub struct DefaultComputer
-{
-}
+pub struct DefaultComputer;
 impl Computer for DefaultComputer
 {
     fn input(&mut self) ->i64 {

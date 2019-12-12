@@ -1,19 +1,14 @@
-use std::{env, io};
-use std::cmp::max;
-use std::fs;
-use std::collections::HashMap;
-
-mod intcode;
-mod robot;
-
+use std::env;
+mod moon;
 fn main() {
     let args: Vec<String> = env::args().collect();
     if args.len()!=2
     {
         return;
     }
-    env::set_var("RUST_BACKTRACE","1");
     let filename=&args[1];
-    let mut program=intcode::load_program(filename);
-    robot::paint_using_robot(program);
+
+    env::set_var("RUST_BACKTRACE","1");
+    let mut moons: Vec<moon::Moon> = moon::load_moons(filename);
+    println!("Alignment at iteration #{}",moon::full_alignment(moons));
 }

@@ -9,7 +9,7 @@ enum RobotDir
     DOWN=2,
     LEFT=3
 }
-pub struct Robot{
+pub struct Turtle{
     pub dir: i64,
     pub map: HashMap<(i64,i64),i64>,
     pub paint: bool,
@@ -19,15 +19,15 @@ pub struct Robot{
 pub fn paint_using_robot(mut program:Vec<i64>)
 {
     let mut counter: usize = 0;
-    let mut robot: Robot = Robot{map: HashMap::new(),dir: 0,paint:true,x:0,y:0};
+    let mut robot: Turtle = Turtle{map: HashMap::new(),dir: 0,paint:true,x:0,y:0};
     robot.map.insert((0,0),1);
     println!("{}",intcode::run_int_code_on_computer(&mut counter,&mut program, &mut robot, false));
     println!("{}",robot.map.len());
-    for y in 0..100 {
+    for y in 0..30 {
         for x in 0..50 {
             if robot.map.contains_key(&(x,y))&&*robot.map.get(&(x,y)).unwrap()==1
             {
-                print!("0");
+                print!("■");
             }
             else {
                 print!(" ");
@@ -36,7 +36,7 @@ pub fn paint_using_robot(mut program:Vec<i64>)
         print!("\n");
     }
 }
-impl Computer for Robot{
+impl Computer for Turtle{
     fn input(&mut self) ->i64 {
         let mut color:i64=0;
         if self.map.contains_key(&(self.x,self.y))

@@ -16,13 +16,14 @@ pub struct Cabinet {
     pub paddle_y: i64,
     pub ball_x: i64,
     pub ball_y: i64,
+    pub autoplay:bool,
     pub game_exiting: bool
 }
 
 pub fn render_screen(mut program: Vec<i64>)
 {
     let mut counter: usize = 0;
-    let mut arcade: Cabinet = Cabinet { term:Term::stdout(), map: HashMap::new(), new_x: -42,new_y:-42 , game_exiting:false,ball_x:-1,ball_y:-1,paddle_x:-1,paddle_y:-1};
+    let mut arcade: Cabinet = Cabinet { autoplay: true,term:Term::stdout(), map: HashMap::new(), new_x: -42,new_y:-42 , game_exiting:false,ball_x:-1,ball_y:-1,paddle_x:-1,paddle_y:-1};
     program[0]=2;
     println!("{}", intcode::run_int_code_on_computer(&mut counter, &mut program, &mut arcade, false));
     println!("{}", arcade.map.iter().map(|(&k,&v)|v).filter(|v|*v==2).fold(0,|a,b| a+b/2));
@@ -55,29 +56,27 @@ impl Computer for Cabinet {
     fn input(&mut self) -> i64 {
         self.render();
         thread::sleep(Duration::from_millis(20));
-        /*
-        let mut input: Option<char> = None;
-        while(input.is_none()) {
-                input = std::io::stdin()
-                    .bytes()
-                    .next()
-                    .and_then(|result| result.ok())
-                    .map(|byte| byte as char);
-        }
-        match input.unwrap() {
-            'd' => return 1,
-            'a' => return -1,
-            _ => return 0
-        }*/
-        if self.paddle_x<self.ball_x
+
+        if self.autoplay
         {
-            return 1;
+            if self.paddle_x<self.ball_x
+            {
+                return 1;
+            }
+            if self.paddle_x>self.ball_x
+            {
+                return -1;
+            }
+            return 0;
         }
-        if self.paddle_x>self.ball_x
-        {
-            return -1;
+        else {
+            let input = self.term.read_char();
+            match input.unwrap() {
+                'd' => return 1,
+                'a' => return -1,
+                _ => return 0
+            }
         }
-        return 0;
     }
     fn output(&mut self, num: i64) {
         if self.new_x==-42

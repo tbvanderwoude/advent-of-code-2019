@@ -84,14 +84,7 @@ pub fn search(conversions: &HashMap<String, Conversion>, i:i64, j:i64) -> i64
     let ore_needed=compute_ore_for_fuel(&conversions,m);
     if ore_needed<=1000000000000
     {
-        let res:i64= search(conversions, m+1,j);
-        if res == -1
-        {
-            return m;
-        }
-        else {
-            return res;
-        }
+        return search(conversions, m+1,j);
     }
     else {
         return search(conversions, i,m-1);
@@ -119,12 +112,8 @@ pub fn load_conversions(filename: &String) -> HashMap<String,Conversion>
             let ore_split: Vec<&str> = cap.split(" ").collect();
             ores.push(Ore{name:ore_split[1].to_string(), amount:ore_split[0].parse::<i64>().unwrap()});
         }
-        for ore in &ores{
-            //println!("{}",ore.to_string());
-        }
         let product = ores.pop().unwrap();
         conversions.insert(product.name,Conversion{resources:ores,amount:product.amount});
-        //println!("");
     }
     return conversions;
 }

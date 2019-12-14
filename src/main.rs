@@ -1,7 +1,6 @@
 use std::env;
 
-mod intcode;
-mod arcade;
+mod nanofactory;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -12,6 +11,7 @@ fn main() {
     let filename = &args[1];
 
     env::set_var("RUST_BACKTRACE", "1");
-    let mut program: Vec<i64> = intcode::load_program(filename);
-    arcade::render_screen(program);
+    let ore: i64 = nanofactory::compute_max_fuel(filename);
+    println!("Ore needed: {}",ore);
+    //arcade::render_screen(program);
 }

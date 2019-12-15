@@ -99,8 +99,8 @@ pub fn run_int_code_on_computer(i: &mut usize, mem: &mut Vec<i64>, in_channel: R
                 {
                     let mut input: i64 = -1;
                     loop {
-                        let result = in_channel.try_recv();
-                        if(result.is_ok())
+                        let result = in_channel.recv();
+                        if result.is_ok()
                         {
                             input=result.unwrap();
                             break;

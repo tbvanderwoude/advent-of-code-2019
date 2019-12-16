@@ -18,8 +18,7 @@ fn run_iter(mut input: i32, i: &mut usize, mem: &mut Vec<i32>) -> i32 {
         let mut mode23: i32 = 0;
         let strOp = mem[*i].to_string();
         let len = strOp.len();
-        if len >= 1
-        {
+        if len >= 1 {
             opcode = strOp.parse::<i32>().unwrap();
             if len >= 3
             {

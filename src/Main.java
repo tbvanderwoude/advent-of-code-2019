@@ -48,7 +48,6 @@ public class Main {
             Node santaOrbit = nodes.get("SAN").parent;
             Node myOrbit = nodes.get("YOU").parent;
 
-            //BFS TIME BABY
             Stack<Node> santaGraph = new Stack<>();
             Stack<Node> myGraph = new Stack<>();
             Node n = santaOrbit;

@@ -5,8 +5,15 @@ use console::Term;
 use std::collections::HashMap;
 use std::cmp::{max, min};
 use rand::Rng;
+use std::thread::sleep;
+use std::time::Duration;
 
 extern crate rand;
+extern crate petgraph;
+use petgraph::{Graph, Undirected};
+use petgraph::csr::NodeIndex;
+use petgraph::graph::Node;
+
 mod async_intcode;
 mod intcode;
 
@@ -24,15 +31,48 @@ impl Explorer
     fn explore(&mut self)
     {
         let mut i: i32=0;
+        let mut oxygen=(0,0);
+        let mut breadcrumbs: Vec<i64> = vec![];
         loop {
-
-            if i%10000==0
+            let mut crumb=false;
+            if i%1==0
             {
-                self.render();
+                //self.render();
             }
-
             let mut mov_instr =0;
-            mov_instr= rand::thread_rng().gen_range::<i64,i64,i64>(1,5);
+            if !self.map.contains_key(&(self.x,self.y-1))
+            {
+                mov_instr=1;
+                breadcrumbs.push(2);
+            }
+            else if !self.map.contains_key(&(self.x,self.y+1))
+            {
+                mov_instr=2;
+                breadcrumbs.push(1);
+            }
+            else if !self.map.contains_key(&(self.x+1,self.y))
+            {
+                mov_instr=4;
+                breadcrumbs.push(3);
+            }
+            else if !self.map.contains_key(&(self.x-1,self.y))
+            {
+                crumb=true;
+                mov_instr=3;
+                breadcrumbs.push(4);
+            }
+            else {
+                let last_move=breadcrumbs.pop();
+                if last_move.is_none()
+                {
+                    println!("Finished exploring");
+                    break;
+                }
+                else
+                {
+                    mov_instr = last_move.unwrap();
+                }
+            }
             self.out_channel.send(mov_instr);
             loop {
                 let res = self.in_channel.recv();
@@ -49,10 +89,19 @@ impl Explorer
                         4 => next_x+=1,
                         _ => ()
                     }
+
                     if info!=0
                     {
+                        if info==2
+                        {
+                            oxygen=(next_x,next_y);
+                            println!("Steps to oxygen: {}",breadcrumbs.len());
+                        }
                         self.x=next_x;
                         self.y=next_y;
+                    }
+                    else {
+                        breadcrumbs.pop();
                     }
                     self.map.insert((next_x,next_y),info);
                     break;
@@ -60,6 +109,43 @@ impl Explorer
             }
             i+=1;
         }
+        println!("Let's build a graph!");
+        let mut nodes = HashMap::new();
+        let mut g: Graph<(i64,i64),f64,Undirected> = Graph::new_undirected();
+        for (k, v) in self.map.iter() {
+            if *v!=0
+            {
+                nodes.insert(k,g.add_node(*k));
+            }
+        }
+        let oxygen_node = *(nodes.get(&oxygen).unwrap());
+            for ((x,y), v) in nodes.iter() {
+            if nodes.contains_key(&(*x - 1, *y))
+            {
+                g.add_edge(*(nodes.get(&(*x, *y)).unwrap()), *(nodes.get(&(*x - 1, *y)).unwrap()), 1f64);
+            }
+            if nodes.contains_key(&(*x + 1, *y))
+            {
+                g.add_edge(*(nodes.get(&(*x, *y)).unwrap()), *(nodes.get(&(*x + 1, *y)).unwrap()), 1f64);
+            }
+            if nodes.contains_key(&(*x, *y-1))
+            {
+                g.add_edge(*(nodes.get(&(*x, *y)).unwrap()), *(nodes.get(&(*x, *y - 1)).unwrap()), 1f64);
+            }
+            if nodes.contains_key(&(*x, *y+1))
+            {
+                g.add_edge(*(nodes.get(&(*x, *y)).unwrap()), *(nodes.get(&(*x, *y+1)).unwrap()), 1f64);
+            }
+        }
+        let mut max_dist:f64 = -1f64;
+        for x in petgraph::algo::bellman_ford(&g,oxygen_node).unwrap().0{
+            if x>max_dist
+            {
+                max_dist=x;
+            }
+        }
+
+        println!("{:?}",max_dist);
     }
     fn render(&mut self)
     {

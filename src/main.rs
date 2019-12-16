@@ -34,11 +34,6 @@ impl Explorer
         let mut oxygen=(0,0);
         let mut breadcrumbs: Vec<i64> = vec![];
         loop {
-            let mut crumb=false;
-            if i%1==0
-            {
-                //self.render();
-            }
             let mut mov_instr =0;
             if !self.map.contains_key(&(self.x,self.y-1))
             {
@@ -57,7 +52,6 @@ impl Explorer
             }
             else if !self.map.contains_key(&(self.x-1,self.y))
             {
-                crumb=true;
                 mov_instr=3;
                 breadcrumbs.push(4);
             }
@@ -66,6 +60,7 @@ impl Explorer
                 if last_move.is_none()
                 {
                     println!("Finished exploring");
+                    self.render();
                     break;
                 }
                 else

@@ -1,18 +1,19 @@
-use console::Term;
-use rand::Rng;
+extern crate petgraph;
+extern crate rand;
+
 use std::cmp::{max, min};
 use std::collections::HashMap;
 use std::env;
-use std::sync::mpsc::{channel, sync_channel, Receiver, Sender, SyncSender};
+use std::sync::mpsc::{channel, Receiver, Sender, sync_channel, SyncSender};
 use std::thread;
 use std::thread::sleep;
 use std::time::Duration;
 
-extern crate petgraph;
-extern crate rand;
+use console::Term;
+use petgraph::{Graph, Undirected};
 use petgraph::csr::NodeIndex;
 use petgraph::graph::Node;
-use petgraph::{Graph, Undirected};
+use rand::Rng;
 
 use crate::async_intcode;
 use crate::intcode;
@@ -25,6 +26,7 @@ pub struct Explorer {
     y: i64,
     map: HashMap<(i64, i64), i64>,
 }
+
 impl Explorer {
     fn explore(&mut self) {
         let mut i: i32 = 0;
@@ -131,9 +133,9 @@ impl Explorer {
                 max_dist = x;
             }
         }
-
         println!("{:?}", max_dist);
     }
+
     fn render(&mut self) {
         self.term.clear_screen();
         if !self.map.is_empty() {
@@ -167,7 +169,7 @@ impl Explorer {
     }
 }
 
-pub fn explore(mut program: Vec<i64>) {
+pub fn view(mut program: Vec<i64>) {
     let (computerOut, mainIn): (Sender<i64>, Receiver<i64>) = channel();
     let (mainOut, computerIn): (Sender<i64>, Receiver<i64>) = channel();
     let mut explorer: Explorer = Explorer {

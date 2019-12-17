@@ -9,3 +9,4 @@ pub mod moon;
 pub mod nanofactory;
 pub mod robot;
 pub mod space_image;
+pub mod vacuum;

@@ -1,6 +1,6 @@
 use std::{env, fs};
 
-pub fn read_signal(filename: String) -> Vec<i32> {
+pub fn read_signal(filename: &String) -> Vec<i32> {
     let contents = fs::read_to_string(filename).expect("Something went wrong reading the file");
     let split: Vec<i32> = contents
         .chars()

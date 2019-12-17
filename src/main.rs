@@ -1,4 +1,5 @@
-use aoc::fft;
+use aoc::intcode;
+use aoc::vacuum;
 use std::{env, fs};
 
 fn main() {
@@ -9,8 +10,6 @@ fn main() {
     let filename: String = args[1].as_str().parse().unwrap();
     env::set_var("RUST_BACKTRACE", "1");
 
-    let mut signal: Vec<i32> = aoc::fft::read_signal(filename);
-    //We are essentially taking frequency bands skip-skip+7
-    aoc::fft::sol_1(signal.clone());
-    aoc::fft::sol_2(signal.clone());
+    let mut program = intcode::load_program(&filename);
+    vacuum::view(program);
 }

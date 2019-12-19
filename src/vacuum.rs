@@ -3,35 +3,28 @@ extern crate rand;
 use std::cmp::{max, min};
 use std::collections::HashMap;
 use std::env;
-use std::sync::mpsc::{channel, Receiver, Sender, sync_channel, SyncSender};
+use std::sync::mpsc::{channel, sync_channel, Receiver, Sender, SyncSender};
 use std::thread;
+use std::time::Duration;
 
 use console::Term;
+
 use crate::async_intcode;
 use crate::intcode;
 use crate::space_image::render;
-use std::time::Duration;
 
 pub struct Camera {
     in_channel: Receiver<i64>,
     out_channel: Sender<i64>,
     term: console::Term,
     buffer: Vec<Vec<char>>,
-
 }
 
 impl Camera {
-    fn lookup(&self,x: i32, y: i32) -> bool
-    {
-        if y<0||y>=self.buffer.len() as i32
-        {
-            return false;
-        }
-        else if x<0||x>=self.buffer[y as usize].len() as i32
-        {
-            return false;
-        }
-        else if self.buffer[y as usize][x as usize]=='.'
+    fn lookup(&self, x: i32, y: i32) -> bool {
+        if (y < 0 || y >= self.buffer.len() as i32)
+            || (x < 0 || x >= self.buffer[y as usize].len() as i32)
+            || (self.buffer[y as usize][x as usize] == '.')
         {
             return false;
         }
@@ -60,35 +53,26 @@ impl Camera {
         loop {
             let res = self.in_channel.recv_timeout(Duration::from_millis(500));
             if res.is_ok() {
-                if res.unwrap()>255 {
+                if res.unwrap() > 255 {
                     println!("{}", res.unwrap());
-                }
-                else {
+                } else {
                     let info = (res.unwrap() as u8) as char;
-                    if info=='\n'
-                    {
+                    if info == '\n' {
                         println!("{}", stream_buffer.iter().collect::<String>());
                         stream_buffer.clear();
-                    }
-                    else {
+                    } else {
                         stream_buffer.push(info);
                     }
                 }
-            }
-            else {
+            } else {
                 break;
             }
-            if i%10000==0
-            {
-            }
-            i+=1;
+            if i % 10000 == 0 {}
+            i += 1;
         }
-
-
     }
-    fn upload_string (&self,string: &str)
-    {
-        for c in string.chars(){
+    fn upload_string(&self, string: &str) {
+        for c in string.chars() {
             self.out_channel.send(c as i64);
         }
     }
@@ -99,53 +83,45 @@ impl Camera {
             let res = self.in_channel.recv();
             if res.is_ok() {
                 let info = (res.unwrap() as u8) as char;
-                if info=='\n'
-                {
+                if info == '\n' {
                     self.buffer.push(vec![]);
                     self.render();
 
                     let mut total = 0;
-                    for y in 0..self.buffer.len(){
-                        for x in 0..self.buffer[y].len(){
-                            if self.buffer[y as usize][x as usize]!='.'
-                            {
+                    for y in 0..self.buffer.len() {
+                        for x in 0..self.buffer[y].len() {
+                            if self.buffer[y as usize][x as usize] != '.' {
                                 let mut neighbours = 0;
-                                if self.lookup(x as i32-1,y as i32)
-                                {
-                                    neighbours+=1;
+                                if self.lookup(x as i32 - 1, y as i32) {
+                                    neighbours += 1;
                                 }
-                                if self.lookup(x as i32+1,y as i32)
-                                {
-                                    neighbours+=1;
+                                if self.lookup(x as i32 + 1, y as i32) {
+                                    neighbours += 1;
                                 }
-                                if self.lookup(x as i32,y as i32+1)
-                                {
-                                    neighbours+=1;
+                                if self.lookup(x as i32, y as i32 + 1) {
+                                    neighbours += 1;
                                 }
-                                if self.lookup(x as i32,y as i32-1)
-                                {
-                                    neighbours+=1;
+                                if self.lookup(x as i32, y as i32 - 1) {
+                                    neighbours += 1;
                                 }
-                                if neighbours>2
-                                {
-                                    total+=x*y;
+                                if neighbours > 2 {
+                                    total += x * y;
                                 }
                             }
                         }
                     }
-                    println!("Total: {}",total);
-                }
-                else {
-                    let n =self.buffer.len() -1;
+                    println!("Total: {}", total);
+                } else {
+                    let n = self.buffer.len() - 1;
                     self.buffer[n].push(info);
                 }
             }
-            i+=1;
+            i += 1;
         }
     }
     fn render(&self) {
         self.term.clear_screen();
-        for line in &self.buffer{
+        for line in &self.buffer {
             println!("{}", line.iter().collect::<String>());
         }
     }
@@ -160,7 +136,7 @@ pub fn view(mut program: Vec<i64>) {
         term: Term::stdout(),
         buffer: vec![],
     };
-    program[0]=2;
+    program[0] = 2;
     thread::spawn(move || {
         let mut iterator = 0;
         async_intcode::run_int_code_on_computer(

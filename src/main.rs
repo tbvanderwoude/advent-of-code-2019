@@ -1,6 +1,9 @@
-use aoc::intcode;
-use aoc::vacuum;
-use std::{env, fs};
+use std::env;
+
+use aoc::rogue;
+use std::error::Error;
+
+//use aoc::rogue;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -9,7 +12,5 @@ fn main() {
     }
     let filename: String = args[1].as_str().parse().unwrap();
     env::set_var("RUST_BACKTRACE", "1");
-
-    let mut program = intcode::load_program(&filename);
-    vacuum::view(program);
+    aoc::rogue::show_maze(&"data/maze.txt".to_string());
 }

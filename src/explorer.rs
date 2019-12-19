@@ -4,15 +4,15 @@ extern crate rand;
 use std::cmp::{max, min};
 use std::collections::HashMap;
 use std::env;
-use std::sync::mpsc::{channel, Receiver, Sender, sync_channel, SyncSender};
+use std::sync::mpsc::{channel, sync_channel, Receiver, Sender, SyncSender};
 use std::thread;
 use std::thread::sleep;
 use std::time::Duration;
 
 use console::Term;
-use petgraph::{Graph, Undirected};
 use petgraph::csr::NodeIndex;
 use petgraph::graph::Node;
+use petgraph::{Graph, Undirected};
 use rand::Rng;
 
 use crate::async_intcode;

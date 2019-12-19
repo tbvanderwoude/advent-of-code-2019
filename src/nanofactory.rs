@@ -1,21 +1,25 @@
-use regex::Regex;
 use std::collections::HashMap;
 use std::fs;
+
+use regex::Regex;
 
 #[derive(Clone)]
 pub struct Ore {
     name: String,
     amount: i64,
 }
+
 impl Ore {
     fn to_string(&self) -> String {
         return format!("{}({})", self.name, self.amount);
     }
 }
+
 pub struct Conversion {
     amount: i64,
     resources: Vec<Ore>,
 }
+
 pub fn compute_ore_for_fuel(conversions: &HashMap<String, Conversion>, fuel_amount: i64) -> i64 {
     let mut needed: Vec<Ore> = vec![Ore {
         name: "FUEL".parse().unwrap(),
@@ -63,6 +67,7 @@ pub fn compute_ore_for_fuel(conversions: &HashMap<String, Conversion>, fuel_amou
     }
     return result;
 }
+
 pub fn search(conversions: &HashMap<String, Conversion>, i: i64, j: i64) -> i64 {
     if i == j {
         return i;
@@ -75,14 +80,17 @@ pub fn search(conversions: &HashMap<String, Conversion>, i: i64, j: i64) -> i64 
         return search(conversions, i, m - 1);
     }
 }
+
 pub fn compute_max_fuel(filename: &String) -> i64 {
     let conversions = load_conversions(filename);
     return search(&conversions, 0, 10000000);
 }
+
 pub fn compute_fuel_ore(filename: &String) -> i64 {
     let conversions = load_conversions(filename);
     return compute_ore_for_fuel(&conversions, 1);
 }
+
 pub fn load_conversions(filename: &String) -> HashMap<String, Conversion> {
     let contents = fs::read_to_string(filename).expect("Something went wrong reading the file");
     let split = contents.split("\n");

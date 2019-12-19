@@ -1,9 +1,8 @@
+use console::Term;
+
 use crate::intcode;
 use crate::intcode::Computer;
-use console::Term;
 use std::collections::HashMap;
-use std::io::Read;
-use std::ops::Add;
 use std::thread;
 use std::time::Duration;
 

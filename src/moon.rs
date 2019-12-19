@@ -1,11 +1,12 @@
 extern crate regex;
 
-use regex::Regex;
 use std::cmp::max;
 use std::collections::HashMap;
 use std::fs;
 use std::mem;
 use std::{env, io};
+
+use regex::Regex;
 
 #[derive(Clone, Copy)]
 pub struct Moon {

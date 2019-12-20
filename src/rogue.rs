@@ -9,6 +9,7 @@ use std::cmp::{min, Ordering};
 use std::fmt::Binary;
 use std::ops::Mul;
 
+#[derive(Clone)]
 pub struct Maze {
     width: usize,
     height: usize,
@@ -165,7 +166,7 @@ pub fn bfs(key_string: usize, maze: &Maze, key: char) -> HashMap<char, (usize, u
     }
     costs
 }
-pub fn initial_bfs(maze: &Maze, start: (usize,usize)) ->HashMap<char, usize> {
+pub fn initial_bfs(maze: &Maze, start: (usize,usize), consider_doors: bool) ->HashMap<char, usize> {
     let mut parent: HashMap<(usize, usize), (usize, usize)> = HashMap::new();
     let mut q: Queue<(usize, usize)> = Queue::new();
     q.add(start);
@@ -180,7 +181,7 @@ pub fn initial_bfs(maze: &Maze, start: (usize,usize)) ->HashMap<char, usize> {
                 if maze.has_key(x, y) {
                     costs.insert(maze.get(x, y), resolve_dist(&parent, (x, y), start));
                     q.add((x, y));
-                } else if maze.has_door(x, y) {
+                } else if maze.has_door(x, y) && consider_doors{
                 } else {
                     q.add((x, y));
                 }
@@ -188,6 +189,28 @@ pub fn initial_bfs(maze: &Maze, start: (usize,usize)) ->HashMap<char, usize> {
         }
     }
     return costs;
+}
+pub fn same_quad(maze: &Maze,(ax,ay): (usize,usize),(bx,by): (usize,usize)) -> bool
+{
+    let mut parent: HashMap<(usize, usize), (usize, usize)> = HashMap::new();
+    let mut q: Queue<(usize, usize)> = Queue::new();
+    q.add((ax,ay));
+
+    while q.size() > 0 {
+        let node = q.remove().unwrap();
+        let neighbours = maze.neighbours(node.0, node.1);
+        for (x, y) in neighbours {
+            if !parent.contains_key(&(x, y)) {
+                parent.insert((x, y), node);
+                q.add((x, y));
+                if bx==x&&by==y
+                {
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
 }
 pub fn distToGetKeys(
     key: char,
@@ -235,16 +258,29 @@ pub fn explore_maze(mut maze: Maze) {
     }
     let mut ultimate_str = 0;
     let mut key_map: HashMap<char, HashMap<char, (usize, usize)>> = HashMap::new();
-    for (c, p) in &maze.keys {
+    let key_copy = maze.keys.clone();
+    for (c, p) in &key_copy {
+        let key_pos = p;
+        let door_pos = maze.doors.get(&c.to_ascii_uppercase()).unwrap();
+        if !same_quad(&maze,*key_pos,*door_pos)
+        {
+            maze.set(door_pos.0,door_pos.1,'.');
+        }
+    }
+    for (c, p) in &key_copy {
         key_map.insert(*c, bfs(add_key(0, *c), &maze, *c));
         ultimate_str = add_key(ultimate_str, *c);
     }
+    //We now want to remove key-door pairs that are not in the same quadrant
+
+
     for start_point in start_points{
 
         println!("Startpoint at ({}, {})",start_point.0,start_point.1);
-        let mut costs: HashMap<char, usize> = initial_bfs(&maze,start_point);
+        let mut costs: HashMap<char, usize> = initial_bfs(&maze,start_point,true);
         //maze.show();
         let mut initial_key = ultimate_str;
+        /*
         for (k,c) in &costs{
             initial_key = remove_key(initial_key,*k);
             for (kd,cd) in key_map.get(&*k).unwrap(){
@@ -252,13 +288,14 @@ pub fn explore_maze(mut maze: Maze) {
             }
         }
         println!("Superkey: {:b}, reduced key: {:b}",ultimate_str,initial_key);
+        */
 
         let mut key_keys_map: HashMap<(char, usize), usize> = HashMap::new();
         let mut min_cost: usize = 10000000;
         let mut dist: HashMap<(char, usize), usize> = HashMap::new();
         for (c, map) in &costs {
             let c_dist =
-                costs.get(c).unwrap() + distToGetKeys(*c, add_key(initial_key, *c), &key_map, &mut key_keys_map);
+                costs.get(c).unwrap() + distToGetKeys(*c, add_key(0, *c), &key_map, &mut key_keys_map);
             min_cost = min_cost.min(c_dist);
         }
         println!("Answer: {}", min_cost);

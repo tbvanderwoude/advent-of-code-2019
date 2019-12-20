@@ -1,12 +1,11 @@
-use std::panic::resume_unwind;
-use std::sync::mpsc::{channel, sync_channel, Receiver, Sender, SyncSender};
+use std::sync::mpsc::{Receiver, Sender};
 
 pub fn run_int_code_on_computer(
     i: &mut usize,
     mem: &mut Vec<i64>,
     in_channel: Receiver<i64>,
     out_channel: Sender<i64>,
-    printDebug: bool,
+    print_debug: bool,
 ) -> i64 {
     let mut rel_base: i64 = 0;
     while *i < mem.len() {
@@ -24,7 +23,6 @@ pub fn run_int_code_on_computer(
             .map(|x| match x.to_digit(10) {
                 Some(d) => return d as i64,
                 None => return 0,
-                _ => return 0,
             })
             .collect();
         let len = chars.len();
@@ -42,7 +40,7 @@ pub fn run_int_code_on_computer(
                 }
             }
         }
-        if printDebug {
+        if print_debug {
             println!(
                 "Opcode {0} (mode1 {1} mode2 {2} mode3 {3} base {4})",
                 opcode, mode1, mode2, mode3, rel_base

@@ -1,4 +1,4 @@
-use std::{env, fs};
+use std::fs;
 
 pub fn total_fuel(weights: &Vec<i32>, rec: bool) -> i32 {
     return weights
@@ -43,7 +43,7 @@ pub fn valid_code(x: &i32) -> bool {
                 counts += 1;
                 print!("{0} has a pair", str);
             } else {
-                if (counts == 1) {
+                if counts == 1 {
                     has_pair = true;
                 }
                 counts = 0;
@@ -51,7 +51,7 @@ pub fn valid_code(x: &i32) -> bool {
         }
         old_char = c;
     }
-    if (counts == 1) {
+    if counts == 1 {
         has_pair = true;
     }
     println!(" and is monotonic");

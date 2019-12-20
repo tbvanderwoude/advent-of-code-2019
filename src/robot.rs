@@ -75,20 +75,20 @@ impl Computer for Turtle {
             if self.dir > 3 {
                 self.dir -= 4;
             }
-            let mut strDir = "up";
+            let mut str_dir = "up";
             match self.dir {
                 0 => self.y -= 1,
                 1 => {
                     self.x += 1;
-                    strDir = "right";
+                    str_dir = "right";
                 }
                 2 => {
                     self.y += 1;
-                    strDir = "down";
+                    str_dir = "down";
                 }
                 3 => {
                     self.x -= 1;
-                    strDir = "left";
+                    str_dir = "left";
                 }
                 _ => (),
             }

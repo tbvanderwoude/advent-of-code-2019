@@ -1,10 +1,6 @@
 extern crate regex;
 
-use std::cmp::max;
-use std::collections::HashMap;
 use std::fs;
-use std::mem;
-use std::{env, io};
 
 use regex::Regex;
 

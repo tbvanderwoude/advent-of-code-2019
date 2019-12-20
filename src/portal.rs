@@ -1,6 +1,13 @@
-use std::collections::HashMap;
-use std::fs;
+use std::collections::{BinaryHeap, HashMap};
+use std::hash::Hash;
+use std::time::Duration;
+use std::{fs, thread};
+
+use petgraph::Graph;
 use queues::*;
+use std::cmp::{min, Ordering};
+use std::fmt::Binary;
+use std::ops::Mul;
 
 #[derive(Clone)]
 pub struct Maze {
@@ -205,7 +212,7 @@ pub fn same_quad(maze: &Maze,(ax,ay): (usize,usize),(bx,by): (usize,usize)) -> b
     }
     return false;
 }
-pub fn dist_to_get_keys(
+pub fn distToGetKeys(
     key: char,
     keys: usize,
     key_map: &HashMap<char, HashMap<char, (usize, usize)>>,
@@ -217,7 +224,7 @@ pub fn dist_to_get_keys(
         let mut min_dist = std::usize::MAX;
         for (next_key, (cost, locks)) in key_map.get(&key).unwrap() {
             if !in_string(keys, *next_key) && locks_keys(*locks, keys) {
-                min_dist = min_dist.min(cost + dist_to_get_keys(*next_key, add_key(keys, *next_key), key_map, cache));
+                min_dist = min_dist.min(cost + distToGetKeys(*next_key, add_key(keys, *next_key), key_map, cache));
             }
         }
         if min_dist == std::usize::MAX {
@@ -267,7 +274,7 @@ pub fn explore_maze(mut maze: Maze) {
         let mut dist: HashMap<(char, usize), usize> = HashMap::new();
         for (c, map) in &costs {
             let c_dist =
-                costs.get(c).unwrap() + dist_to_get_keys(*c, add_key(0, *c), &key_map, &mut key_keys_map);
+                costs.get(c).unwrap() + distToGetKeys(*c, add_key(0, *c), &key_map, &mut key_keys_map);
             min_cost = min_cost.min(c_dist);
         }
         total+=min_cost;

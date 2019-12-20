@@ -1,4 +1,4 @@
-use std::{env, fs};
+use std::fs;
 
 pub fn read_signal(filename: &String) -> Vec<i32> {
     let contents = fs::read_to_string(filename).expect("Something went wrong reading the file");
@@ -29,7 +29,7 @@ pub fn plot_square(phase_width: i32) {
     for i in 0..16 {
         print!("{} ", sample_square(phase_width, i + 1));
     }
-    println!("");
+    println!();
 }
 
 pub fn sol_1(mut signal: Vec<i32>) {

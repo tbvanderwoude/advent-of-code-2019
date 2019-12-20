@@ -31,9 +31,9 @@ pub fn render(layers: &Vec<String>) {
     for y in 0..6 {
         for x in 0..25 {
             for layer in layers {
-                let char = layer.chars().nth(y * 25 + x).unwrap();
-                if (char != '2') {
-                    print!("{}", char);
+                let c = layer.chars().nth(y * 25 + x).unwrap();
+                if c != '2' {
+                    print!("{}", c);
                     break;
                 }
             }

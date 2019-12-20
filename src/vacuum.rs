@@ -1,17 +1,12 @@
 extern crate rand;
 
-use std::cmp::{max, min};
-use std::collections::HashMap;
-use std::env;
-use std::sync::mpsc::{channel, sync_channel, Receiver, Sender, SyncSender};
+use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread;
 use std::time::Duration;
 
 use console::Term;
 
 use crate::async_intcode;
-use crate::intcode;
-use crate::space_image::render;
 
 pub struct Camera {
     in_channel: Receiver<i64>,
@@ -128,11 +123,11 @@ impl Camera {
 }
 
 pub fn view(mut program: Vec<i64>) {
-    let (computerOut, mainIn): (Sender<i64>, Receiver<i64>) = channel();
-    let (mainOut, computerIn): (Sender<i64>, Receiver<i64>) = channel();
+    let (comp_out, main_in): (Sender<i64>, Receiver<i64>) = channel();
+    let (main_out, comp_in): (Sender<i64>, Receiver<i64>) = channel();
     let mut explorer: Camera = Camera {
-        in_channel: mainIn,
-        out_channel: mainOut,
+        in_channel: main_in,
+        out_channel: main_out,
         term: Term::stdout(),
         buffer: vec![],
     };
@@ -142,8 +137,8 @@ pub fn view(mut program: Vec<i64>) {
         async_intcode::run_int_code_on_computer(
             &mut iterator,
             &mut program,
-            computerIn,
-            computerOut,
+            comp_in,
+            comp_out,
             false,
         );
     });

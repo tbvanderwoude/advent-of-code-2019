@@ -1,22 +1,13 @@
 extern crate petgraph;
 extern crate rand;
 
-use std::cmp::{max, min};
 use std::collections::HashMap;
-use std::env;
-use std::sync::mpsc::{channel, sync_channel, Receiver, Sender, SyncSender};
+use std::sync::mpsc::{channel,Receiver, Sender};
 use std::thread;
-use std::thread::sleep;
-use std::time::Duration;
-
 use console::Term;
-use petgraph::csr::NodeIndex;
-use petgraph::graph::Node;
 use petgraph::{Graph, Undirected};
-use rand::Rng;
 
 use crate::async_intcode;
-use crate::intcode;
 
 pub struct Explorer {
     in_channel: Receiver<i64>,
@@ -139,27 +130,27 @@ impl Explorer {
     fn render(&mut self) {
         self.term.clear_screen();
         if !self.map.is_empty() {
-            let maxX = *self.map.keys().map(|(a, b)| a).max().unwrap() + 3;
-            let maxY = *self.map.keys().map(|(a, b)| b).max().unwrap() + 3;
-            let minX = *self.map.keys().map(|(a, b)| a).min().unwrap() - 3;
-            let minY = *self.map.keys().map(|(a, b)| b).min().unwrap() - 3;
-            let w = (maxX - minX) as usize;
-            let h = (maxY - minY) as usize;
+            let max_x = *self.map.keys().map(|(a, b)| a).max().unwrap() + 3;
+            let max_y = *self.map.keys().map(|(a, b)| b).max().unwrap() + 3;
+            let min_x = *self.map.keys().map(|(a, b)| a).min().unwrap() - 3;
+            let min_y = *self.map.keys().map(|(a, b)| b).min().unwrap() - 3;
+            let w = (max_x - min_x) as usize;
+            let h = (max_y - min_y) as usize;
 
-            for y in minY..maxY {
+            for y in min_y..max_y {
                 let mut line: Vec<char> = vec!['#'; w + 2];
-                for x in minX..maxX {
+                for x in min_x..max_x {
                     if self.map.contains_key(&(x, y)) {
                         match *self.map.get(&(x, y)).unwrap() {
-                            0 => line[(x - minX) as usize] = '■',
-                            1 => line[(x - minX) as usize] = ' ',
-                            2 => line[(x - minX) as usize] = 'X',
-                            _ => line[(x - minX) as usize] = '#',
+                            0 => line[(x - min_x) as usize] = '■',
+                            1 => line[(x - min_x) as usize] = ' ',
+                            2 => line[(x - min_x) as usize] = 'X',
+                            _ => line[(x - min_x) as usize] = '#',
                         }
                         if self.x == x && self.y == y {
-                            line[(x - minX) as usize] = '@';
+                            line[(x - min_x) as usize] = '@';
                         } else if x == 0 && y == 0 {
-                            line[(x - minX) as usize] = '$';
+                            line[(x - min_x) as usize] = '$';
                         }
                     }
                 }
@@ -170,11 +161,11 @@ impl Explorer {
 }
 
 pub fn view(mut program: Vec<i64>) {
-    let (computerOut, mainIn): (Sender<i64>, Receiver<i64>) = channel();
-    let (mainOut, computerIn): (Sender<i64>, Receiver<i64>) = channel();
+    let (comp_out, main_in): (Sender<i64>, Receiver<i64>) = channel();
+    let (main_out, comp_in): (Sender<i64>, Receiver<i64>) = channel();
     let mut explorer: Explorer = Explorer {
-        in_channel: mainIn,
-        out_channel: mainOut,
+        in_channel: main_in,
+        out_channel: main_out,
         term: Term::stdout(),
         map: HashMap::new(),
         x: 0,
@@ -185,8 +176,8 @@ pub fn view(mut program: Vec<i64>) {
         async_intcode::run_int_code_on_computer(
             &mut iterator,
             &mut program,
-            computerIn,
-            computerOut,
+            comp_in,
+            comp_out,
             false,
         );
     });

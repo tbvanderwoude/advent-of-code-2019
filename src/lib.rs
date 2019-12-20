@@ -10,5 +10,5 @@ pub mod nanofactory;
 pub mod robot;
 pub mod rogue;
 pub mod space_image;
-pub mod tractor;
 pub mod vacuum;
+pub mod tractor;

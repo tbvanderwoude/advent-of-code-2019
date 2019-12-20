@@ -218,7 +218,6 @@ pub fn distToGetKeys(
     key_map: &HashMap<char, HashMap<char, (usize, usize)>>,
     cache: &mut HashMap<(char, usize), usize>,
 ) -> usize {
-    // it is memowisasion
     if cache.contains_key(&(key, keys)) {
         *cache.get(&(key, keys)).unwrap()
     } else {
@@ -232,9 +231,6 @@ pub fn distToGetKeys(
             min_dist = 0;
         }
         cache.insert((key, keys), min_dist);
-        if cache.contains_key(&(key, keys)) {
-            //println!("Now has cache for ({}, {})", key, keys);
-        }
         return min_dist;
     }
 }
@@ -256,7 +252,6 @@ pub fn explore_maze(mut maze: Maze) {
             }
         }
     }
-    let mut ultimate_str = 0;
     let mut key_map: HashMap<char, HashMap<char, (usize, usize)>> = HashMap::new();
     let key_copy = maze.keys.clone();
     for (c, p) in &key_copy {
@@ -269,27 +264,11 @@ pub fn explore_maze(mut maze: Maze) {
     }
     for (c, p) in &key_copy {
         key_map.insert(*c, bfs(add_key(0, *c), &maze, *c));
-        ultimate_str = add_key(ultimate_str, *c);
     }
     //We now want to remove key-door pairs that are not in the same quadrant
-
-
+    let mut total = 0;
     for start_point in start_points{
-
-        println!("Startpoint at ({}, {})",start_point.0,start_point.1);
         let mut costs: HashMap<char, usize> = initial_bfs(&maze,start_point,true);
-        //maze.show();
-        let mut initial_key = ultimate_str;
-        /*
-        for (k,c) in &costs{
-            initial_key = remove_key(initial_key,*k);
-            for (kd,cd) in key_map.get(&*k).unwrap(){
-                initial_key = remove_key(initial_key,*kd);
-            }
-        }
-        println!("Superkey: {:b}, reduced key: {:b}",ultimate_str,initial_key);
-        */
-
         let mut key_keys_map: HashMap<(char, usize), usize> = HashMap::new();
         let mut min_cost: usize = 10000000;
         let mut dist: HashMap<(char, usize), usize> = HashMap::new();
@@ -298,8 +277,9 @@ pub fn explore_maze(mut maze: Maze) {
                 costs.get(c).unwrap() + distToGetKeys(*c, add_key(0, *c), &key_map, &mut key_keys_map);
             min_cost = min_cost.min(c_dist);
         }
-        println!("Answer: {}", min_cost);
+        total+=min_cost;
     }
+    println!("Total cost: {}", total);
 }
 
 #[cfg(test)]

@@ -19,22 +19,6 @@ pub struct Maze {
 }
 
 impl Maze {
-    fn neigh_nodes(&self, x: usize, y: usize) -> Vec<(usize, usize)> {
-        let mut neighbours = vec![];
-        if self.valid(x - 1, y) {
-            neighbours.push((x - 1, y));
-        }
-        if self.valid(x + 1, y) {
-            neighbours.push((x + 1, y));
-        }
-        if self.valid(x, y - 1) {
-            neighbours.push((x, y - 1));
-        }
-        if self.valid(x, y + 1) {
-            neighbours.push((x, y + 1));
-        }
-        neighbours
-    }
     fn neighbours(&self, x: usize, y: usize) -> Vec<(usize, usize)> {
         let mut neighbours = vec![];
         if self.valid(x - 1, y) {
@@ -48,10 +32,6 @@ impl Maze {
         }
         if self.valid(x, y + 1) {
             neighbours.push((x, y + 1));
-        }
-        if self.get(x,y)=='p'
-        {
-            neighbours.push(*self.tunnels.get(&(x,y)).unwrap())
         }
         neighbours
     }
@@ -108,12 +88,13 @@ pub fn show_maze(filename: &String) {
     explore_maze(maze);
 }
 fn resolve_dist(
-    lineage: &HashMap<(usize, usize), (usize, usize)>,
-    mut node: (usize, usize),
-    start: (usize, usize),
+    lineage: &HashMap<(usize, usize,usize), (usize, usize,usize)>,
+    mut node: (usize, usize,usize),
+    start: (usize, usize,usize),
 ) -> usize {
     let mut dist = 0;
     while lineage.contains_key(&node) && node != start {
+        println!("Next in lineage: ({}, {}, {})",node.0,node.1,node.2);
         node = *lineage.get(&node).unwrap();
         dist += 1;
     }
@@ -160,8 +141,16 @@ pub fn explore_maze(mut maze: Maze) {
                             let other_pos=*temp_map.get(&portal_name).unwrap();
                             maze.tunnels.insert(other_pos, (x, y));
                             maze.tunnels.insert( (x, y),other_pos);
-                            maze.set(other_pos.0,other_pos.1,'p');
-                            maze.set(x,y,'p');
+                            let this_norm = (x as i32 - (maze.width/2) as i32).abs()+(y as i32 - (maze.height/2) as i32).abs();
+                            let other_norm =(other_pos.0 as i32 - (maze.width/2) as i32).abs()+(other_pos.1 as i32 - (maze.height/2) as i32).abs();
+                            if this_norm>other_norm{
+                                maze.set(other_pos.0,other_pos.1,'i');
+                                maze.set(x,y,'o');
+                            }
+                            else{
+                                maze.set(other_pos.0,other_pos.1,'o');
+                                maze.set(x,y,'i');
+                            }
                         }
                         else
                         {
@@ -172,27 +161,44 @@ pub fn explore_maze(mut maze: Maze) {
             }
         }
     }
-    let mut parent: HashMap<(usize, usize), (usize, usize)> = HashMap::new();
-    let mut q: Queue<(usize, usize)> = Queue::new();
-    q.add(start);
+    let mut parent: HashMap<(usize, usize,usize), (usize, usize,usize)> = HashMap::new();
+    let mut q: Queue<(usize, usize,usize)> = Queue::new();
+    q.add((start.0,start.1,0));
     while q.size() > 0 {
         let node = q.remove().unwrap();
-        let neighbours = maze.neighbours(node.0, node.1);
-        for (x, y) in neighbours {
-            if !parent.contains_key(&(x, y)) {
-                parent.insert((x, y), node);
-                q.add((x, y));
-                if x==end.0&&y==end.1
-                {
-                    println!("Dist to end: {}",resolve_dist(&parent,end,start))
+        if node.2<30
+        {
+            let mut neighbours = maze.neighbours(node.0, node.1);
+            for (x, y) in neighbours {
+                if !parent.contains_key(&(x, y,node.2)) {
+                    parent.insert((x, y,node.2), node);
+                    q.add((x, y,node.2));
+                    if node.2==0&&x==end.0&&y==end.1
+                    {
+                        println!("Dist to end: {}",resolve_dist(&parent,(end.0,end.1,0),(start.0,start.1,0)));
+                        break;
+                    }
                 }
-//                if bx==x&&by==y
-//                {
-//                }
+            }
+            if maze.get(node.0,node.1)=='i'
+            {
+                let (px, py) = *maze.tunnels.get(&(node.0, node.1)).unwrap();
+                if !parent.contains_key(&(px, py,node.2+1)) {
+                    parent.insert((px, py, node.2 + 1), node);
+                    q.add((px, py, node.2 + 1));
+                }
+            }
+            else if node.2>0&&maze.get(node.0,node.1)=='o'
+            {
+                let (px, py) = *maze.tunnels.get(&(node.0, node.1)).unwrap();
+                if !parent.contains_key(&(px, py,node.2-1)) {
+                    parent.insert((px, py, node.2 - 1), node);
+                    q.add((px, py, node.2 - 1));
+                }
             }
         }
     }
-//    maze.show();
+    maze.show();
 //    for ((ax,ay),(bx,by)) in &maze.tunnels {
 //        println!("({}, {}) <-> ({}, {})",*ax,*ay,*bx,*by);
 //    }

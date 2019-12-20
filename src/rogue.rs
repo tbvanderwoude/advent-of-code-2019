@@ -68,28 +68,6 @@ impl Maze {
     }
 }
 
-/*
-This is terrible, will give the correct answer with a minor modification but is O(n!)
-while key_q.size() > 0 {
-    let (key, cost, key_str) = key_q.remove().unwrap();
-    let map = key_map.get(&key).unwrap();
-    println!("Key: {}", key_str);
-    for (next_key, (next_cost, lock_str)) in map {
-        if !in_string(key_str, *next_key) && locks_keys(*lock_str, key_str) {
-            //Prints non-trivial paths
-            if *lock_str > 0 {
-                println!("We can go from {} to {}", key, next_key);
-            }
-            let new_key_str = add_key(key_str, *next_key);
-            if new_key_str == ultimate_str {
-                println!("Cost: {}", cost);
-                break;
-            }
-            key_q.add((*next_key, next_cost + cost, new_key_str));
-        }
-    }
-}
-*/
 pub fn load_maze(filename: &String) -> Maze {
     let contents = fs::read_to_string(filename).expect("Something went wrong reading the file");
     let split = contents.split("\n");
@@ -154,6 +132,9 @@ pub fn in_string(str: usize, key: char) -> bool {
     str & (1 << (key as usize - 'a' as usize)) != 0
 }
 
+pub fn remove_key(str: usize, key: char) ->usize{
+    str ^ (1 << (key as usize - 'a' as usize))
+}
 pub fn add_key(str: usize, key: char) -> usize {
     str | (1 << (key as usize - 'a' as usize))
 }
@@ -184,24 +165,44 @@ pub fn bfs(key_string: usize, maze: &Maze, key: char) -> HashMap<char, (usize, u
     }
     costs
 }
+pub fn initial_bfs(maze: &Maze, start: (usize,usize)) ->HashMap<char, usize> {
+    let mut parent: HashMap<(usize, usize), (usize, usize)> = HashMap::new();
+    let mut q: Queue<(usize, usize)> = Queue::new();
+    q.add(start);
+    let mut costs: HashMap<char, usize> = HashMap::new();
 
+    while q.size() > 0 {
+        let node = q.remove().unwrap();
+        let neighbours = maze.neighbours(node.0, node.1);
+        for (x, y) in neighbours {
+            if !parent.contains_key(&(x, y)) {
+                parent.insert((x, y), node);
+                if maze.has_key(x, y) {
+                    costs.insert(maze.get(x, y), resolve_dist(&parent, (x, y), start));
+                    q.add((x, y));
+                } else if maze.has_door(x, y) {
+                } else {
+                    q.add((x, y));
+                }
+            }
+        }
+    }
+    return costs;
+}
 pub fn distToGetKeys(
     key: char,
     keys: usize,
     key_map: &HashMap<char, HashMap<char, (usize, usize)>>,
     cache: &mut HashMap<(char, usize), usize>,
 ) -> usize {
-    //println!("Key: {:b}",keys);
+    // it is memowisasion
     if cache.contains_key(&(key, keys)) {
-        //println!("Used cache for ({}, {})",key,keys);
         *cache.get(&(key, keys)).unwrap()
     } else {
         let mut min_dist = std::usize::MAX;
         for (next_key, (cost, locks)) in key_map.get(&key).unwrap() {
             if !in_string(keys, *next_key) && locks_keys(*locks, keys) {
-                let mut dist =
-                    cost + distToGetKeys(*next_key, add_key(keys, *next_key), key_map, cache);
-                min_dist = min_dist.min(dist);
+                min_dist = min_dist.min(cost + distToGetKeys(*next_key, add_key(keys, *next_key), key_map, cache));
             }
         }
         if min_dist == std::usize::MAX {
@@ -217,6 +218,7 @@ pub fn distToGetKeys(
 
 pub fn explore_maze(mut maze: Maze) {
     let i: i32 = 0;
+    let mut start_points: Vec<(usize,usize)> = Vec::new();
     for y in 0..maze.height {
         for x in 0..maze.width {
             if maze.get(x, y).is_lowercase() {
@@ -227,55 +229,40 @@ pub fn explore_maze(mut maze: Maze) {
             }
             if maze.get(x, y) == '@' {
                 maze.set(x, y, '.');
-                maze.start = (x, y);
+                start_points.push((x,y));
             }
         }
     }
-    let mut costs: HashMap<char, usize> = HashMap::new();
-    let mut parent: HashMap<(usize, usize), (usize, usize)> = HashMap::new();
-    let mut q: Queue<(usize, usize)> = Queue::new();
-    q.add(maze.start);
-
-    while q.size() > 0 {
-        let node = q.remove().unwrap();
-        let neighbours = maze.neighbours(node.0, node.1);
-        for (x, y) in neighbours {
-            if !parent.contains_key(&(x, y)) {
-                parent.insert((x, y), node);
-                if maze.has_key(x, y) {
-                    costs.insert(maze.get(x, y), resolve_dist(&parent, (x, y), maze.start));
-                    q.add((x, y));
-                } else if maze.has_door(x, y) {
-                } else {
-                    q.add((x, y));
-                }
-            }
-        }
-    }
-    //maze.show();
-    let mut key_map: HashMap<char, HashMap<char, (usize, usize)>> = HashMap::new();
     let mut ultimate_str = 0;
+    let mut key_map: HashMap<char, HashMap<char, (usize, usize)>> = HashMap::new();
     for (c, p) in &maze.keys {
         key_map.insert(*c, bfs(add_key(0, *c), &maze, *c));
         ultimate_str = add_key(ultimate_str, *c);
     }
-    //println!("Ultimate string: {:b}", ultimate_str);
+    for start_point in start_points{
 
-    let mut key_keys_map: HashMap<(char, usize), usize> = HashMap::new();
-    let mut min_cost: usize = 10000000;
+        println!("Startpoint at ({}, {})",start_point.0,start_point.1);
+        let mut costs: HashMap<char, usize> = initial_bfs(&maze,start_point);
+        //maze.show();
+        let mut initial_key = ultimate_str;
+        for (k,c) in &costs{
+            initial_key = remove_key(initial_key,*k);
+            for (kd,cd) in key_map.get(&*k).unwrap(){
+                initial_key = remove_key(initial_key,*kd);
+            }
+        }
+        println!("Superkey: {:b}, reduced key: {:b}",ultimate_str,initial_key);
 
-    let mut dist: HashMap<(char, usize), usize> = HashMap::new();
-    for (c, map) in &costs {
-        let c_dist =
-            costs.get(c).unwrap() + distToGetKeys(*c, add_key(0, *c), &key_map, &mut key_keys_map);
-        min_cost = min_cost.min(c_dist);
+        let mut key_keys_map: HashMap<(char, usize), usize> = HashMap::new();
+        let mut min_cost: usize = 10000000;
+        let mut dist: HashMap<(char, usize), usize> = HashMap::new();
+        for (c, map) in &costs {
+            let c_dist =
+                costs.get(c).unwrap() + distToGetKeys(*c, add_key(initial_key, *c), &key_map, &mut key_keys_map);
+            min_cost = min_cost.min(c_dist);
+        }
+        println!("Answer: {}", min_cost);
     }
-    println!("Answer: {}", min_cost);
-    /*
-    while key_q.size() > 0 {
-        let c = key_q.remove().unwrap();
-        for (c, d) in key_map.get(c).unwrap() {}
-    }*/
 }
 
 #[cfg(test)]

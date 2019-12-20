@@ -12,3 +12,4 @@ pub mod rogue;
 pub mod space_image;
 pub mod vacuum;
 pub mod tractor;
+pub mod portal;

@@ -15,15 +15,11 @@ pub struct Maze {
     height: usize,
     map: Vec<Vec<char>>,
     start: (usize, usize),
-    doors: HashMap<char, (usize, usize)>,
-    keys: HashMap<char, (usize, usize)>,
+    tunnels: HashMap<(usize,usize),(usize,usize)>
 }
 
 impl Maze {
-    fn coords(&mut self, id: usize) -> (usize, usize) {
-        (id % self.width, id / self.width)
-    }
-    fn neighbours(&self, x: usize, y: usize) -> Vec<(usize, usize)> {
+    fn neigh_nodes(&self, x: usize, y: usize) -> Vec<(usize, usize)> {
         let mut neighbours = vec![];
         if self.valid(x - 1, y) {
             neighbours.push((x - 1, y));
@@ -39,23 +35,34 @@ impl Maze {
         }
         neighbours
     }
-    fn has_key(&self, x: usize, y: usize) -> bool {
-        self.get(x, y) >= 'a' && self.get(x, y) <= 'z'
-    }
-    fn has_door(&self, x: usize, y: usize) -> bool {
-        self.get(x, y) >= 'A' && self.get(x, y) <= 'Z'
+    fn neighbours(&self, x: usize, y: usize) -> Vec<(usize, usize)> {
+        let mut neighbours = vec![];
+        if self.valid(x - 1, y) {
+            neighbours.push((x - 1, y));
+        }
+        if self.valid(x + 1, y) {
+            neighbours.push((x + 1, y));
+        }
+        if self.valid(x, y - 1) {
+            neighbours.push((x, y - 1));
+        }
+        if self.valid(x, y + 1) {
+            neighbours.push((x, y + 1));
+        }
+        if self.get(x,y)=='p'
+        {
+            neighbours.push(*self.tunnels.get(&(x,y)).unwrap())
+        }
+        neighbours
     }
     fn show(&self) {
         for y in 0..self.height {
             println!("{}", self.map[y].iter().collect::<String>());
         }
-        println!("doors: {}, keys: {}", &self.doors.len(), &self.keys.len());
-        for (k, v) in &self.doors {
-            //println!("Door {}, is at ({}, {})",k,v.0,v.1);
-        }
-        for (k, v) in &self.keys {
-            //println!("Key {}, is at ({}, {})",k,v.0,v.1);
-        }
+    }
+    fn has_letter(&self, x:usize, y: usize) ->bool
+    {
+        self.get(x,y) >= 'A'&&self.get(x,y) <= 'Z'
     }
 
     fn valid(&self, x: usize, y: usize) -> bool {
@@ -74,7 +81,6 @@ pub fn load_maze(filename: &String) -> Maze {
     let split = contents.split("\n");
     let mut maze: Vec<Vec<char>> = vec![];
     let mut y = 0;
-    let mut x = 0;
     for s in split {
         maze.push(vec![]);
         for c in s.chars() {
@@ -82,13 +88,18 @@ pub fn load_maze(filename: &String) -> Maze {
         }
         y += 1;
     }
+    let mut x = maze.iter().map(|vec|vec.len()).max().unwrap();
+    for i in 0..maze.len(){
+        while maze[i].len()<x {
+            maze[i].push(' ');
+        }
+    }
     Maze {
-        width: maze[0].len(),
+        width: x,
         height: y,
         map: maze,
-        keys: HashMap::new(),
-        doors: HashMap::new(),
         start: (0, 0),
+        tunnels: HashMap::new()
     }
 }
 
@@ -96,7 +107,6 @@ pub fn show_maze(filename: &String) {
     let maze: Maze = load_maze(filename);
     explore_maze(maze);
 }
-
 fn resolve_dist(
     lineage: &HashMap<(usize, usize), (usize, usize)>,
     mut node: (usize, usize),
@@ -109,177 +119,83 @@ fn resolve_dist(
     }
     dist
 }
-
-fn resolve_dist_keys(
-    lineage: &HashMap<(usize, usize), (usize, usize)>,
-    maze: &Maze,
-    mut node: (usize, usize),
-    start: (usize, usize),
-) -> (usize, usize) {
-    let mut dist = 0;
-    let mut string = 0;
-    while lineage.contains_key(&node) && node != start {
-        node = *lineage.get(&node).unwrap();
-        if maze.has_door(node.0, node.1) {
-            string = add_key(string, maze.get(node.0, node.1).to_ascii_lowercase());
-        }
-        dist += 1;
-    }
-    //println!("bitstring:  {}",string);
-    (dist, string)
-}
-
-pub fn in_string(str: usize, key: char) -> bool {
-    str & (1 << (key as usize - 'a' as usize)) != 0
-}
-
-pub fn remove_key(str: usize, key: char) ->usize{
-    str ^ (1 << (key as usize - 'a' as usize))
-}
-pub fn add_key(str: usize, key: char) -> usize {
-    str | (1 << (key as usize - 'a' as usize))
-}
-pub fn locks_keys(locks: usize, keys: usize) -> bool {
-    locks & keys == locks
-}
-pub fn bfs(key_string: usize, maze: &Maze, key: char) -> HashMap<char, (usize, usize)> {
-    let mut parent: HashMap<(usize, usize), (usize, usize)> = HashMap::new();
-    let mut costs: HashMap<char, (usize, usize)> = HashMap::new();
-    let mut q: Queue<(usize, usize)> = Queue::new();
-    let start = *maze.keys.get(&key).unwrap();
-    q.add(start);
-    while q.size() > 0 {
-        let node = q.remove().unwrap();
-        let neighbours = maze.neighbours(node.0, node.1);
-        for (x, y) in neighbours {
-            if !parent.contains_key(&(x, y)) {
-                parent.insert((x, y), node);
-                q.add((x, y));
-                if maze.has_key(x, y) && !in_string(key_string, maze.get(x, y)) {
-                    costs.insert(
-                        maze.get(x, y),
-                        resolve_dist_keys(&parent, &maze, (x, y), start),
-                    );
-                }
-            }
-        }
-    }
-    costs
-}
-pub fn initial_bfs(maze: &Maze, start: (usize,usize), consider_doors: bool) ->HashMap<char, usize> {
-    let mut parent: HashMap<(usize, usize), (usize, usize)> = HashMap::new();
-    let mut q: Queue<(usize, usize)> = Queue::new();
-    q.add(start);
-    let mut costs: HashMap<char, usize> = HashMap::new();
-
-    while q.size() > 0 {
-        let node = q.remove().unwrap();
-        let neighbours = maze.neighbours(node.0, node.1);
-        for (x, y) in neighbours {
-            if !parent.contains_key(&(x, y)) {
-                parent.insert((x, y), node);
-                if maze.has_key(x, y) {
-                    costs.insert(maze.get(x, y), resolve_dist(&parent, (x, y), start));
-                    q.add((x, y));
-                } else if maze.has_door(x, y) && consider_doors{
-                } else {
-                    q.add((x, y));
-                }
-            }
-        }
-    }
-    return costs;
-}
-pub fn same_quad(maze: &Maze,(ax,ay): (usize,usize),(bx,by): (usize,usize)) -> bool
-{
-    let mut parent: HashMap<(usize, usize), (usize, usize)> = HashMap::new();
-    let mut q: Queue<(usize, usize)> = Queue::new();
-    q.add((ax,ay));
-
-    while q.size() > 0 {
-        let node = q.remove().unwrap();
-        let neighbours = maze.neighbours(node.0, node.1);
-        for (x, y) in neighbours {
-            if !parent.contains_key(&(x, y)) {
-                parent.insert((x, y), node);
-                q.add((x, y));
-                if bx==x&&by==y
-                {
-                    return true;
-                }
-            }
-        }
-    }
-    return false;
-}
-pub fn distToGetKeys(
-    key: char,
-    keys: usize,
-    key_map: &HashMap<char, HashMap<char, (usize, usize)>>,
-    cache: &mut HashMap<(char, usize), usize>,
-) -> usize {
-    if cache.contains_key(&(key, keys)) {
-        *cache.get(&(key, keys)).unwrap()
-    } else {
-        let mut min_dist = std::usize::MAX;
-        for (next_key, (cost, locks)) in key_map.get(&key).unwrap() {
-            if !in_string(keys, *next_key) && locks_keys(*locks, keys) {
-                min_dist = min_dist.min(cost + distToGetKeys(*next_key, add_key(keys, *next_key), key_map, cache));
-            }
-        }
-        if min_dist == std::usize::MAX {
-            min_dist = 0;
-        }
-        cache.insert((key, keys), min_dist);
-        return min_dist;
-    }
-}
-
 pub fn explore_maze(mut maze: Maze) {
-    let i: i32 = 0;
-    let mut start_points: Vec<(usize,usize)> = Vec::new();
-    for y in 0..maze.height {
-        for x in 0..maze.width {
-            if maze.get(x, y).is_lowercase() {
-                maze.keys.insert(maze.get(x, y), (x, y));
-            }
-            if maze.get(x, y).is_uppercase() {
-                maze.doors.insert(maze.get(x, y), (x, y));
-            }
-            if maze.get(x, y) == '@' {
-                maze.set(x, y, '.');
-                start_points.push((x,y));
+    let mut temp_map: HashMap<String,(usize,usize)> = HashMap::new();
+    let mut start = (0,0);
+    let mut end = (0,0);
+    for y in 1..maze.height{
+        for x in 1..maze.width {
+            if maze.get(x,y)=='.'
+            {
+                for neigh in maze.neighbours(x,y){
+                    if maze.has_letter(neigh.0,neigh.1)
+                    {
+                        let mut portal_name: String = String::from("");
+                        for letter_neigh in maze.neighbours(neigh.0,neigh.1){
+                            if maze.has_letter(letter_neigh.0,letter_neigh.1)
+                            {
+                                if letter_neigh.0<neigh.0||letter_neigh.1<neigh.1
+                                {
+                                    portal_name.push(maze.get(letter_neigh.0,letter_neigh.1));
+                                    portal_name.push(maze.get(neigh.0,neigh.1));
+                                }
+                                else {
+                                    portal_name.push(maze.get(neigh.0,neigh.1));
+                                    portal_name.push(maze.get(letter_neigh.0,letter_neigh.1));
+                                }
+                                maze.set(letter_neigh.0,letter_neigh.1,'#');
+                            }
+                        }
+//                        println!("({}, {}) has a portal: {}",x,y,portal_name);
+                        maze.set(neigh.0,neigh.1,'#');
+                        if portal_name=="AA"
+                        {
+                            start = (x,y);
+                        }
+                        else if portal_name=="ZZ" {
+                            end = (x,y);
+                        }
+                        else if temp_map.contains_key(&portal_name)
+                        {
+                            let other_pos=*temp_map.get(&portal_name).unwrap();
+                            maze.tunnels.insert(other_pos, (x, y));
+                            maze.tunnels.insert( (x, y),other_pos);
+                            maze.set(other_pos.0,other_pos.1,'p');
+                            maze.set(x,y,'p');
+                        }
+                        else
+                        {
+                            temp_map.insert(portal_name,(x,y));
+                        }
+                    }
+                }
             }
         }
     }
-    let mut key_map: HashMap<char, HashMap<char, (usize, usize)>> = HashMap::new();
-    let key_copy = maze.keys.clone();
-    for (c, p) in &key_copy {
-        let key_pos = p;
-        let door_pos = maze.doors.get(&c.to_ascii_uppercase()).unwrap();
-        if !same_quad(&maze,*key_pos,*door_pos)
-        {
-            maze.set(door_pos.0,door_pos.1,'.');
+    let mut parent: HashMap<(usize, usize), (usize, usize)> = HashMap::new();
+    let mut q: Queue<(usize, usize)> = Queue::new();
+    q.add(start);
+    while q.size() > 0 {
+        let node = q.remove().unwrap();
+        let neighbours = maze.neighbours(node.0, node.1);
+        for (x, y) in neighbours {
+            if !parent.contains_key(&(x, y)) {
+                parent.insert((x, y), node);
+                q.add((x, y));
+                if x==end.0&&y==end.1
+                {
+                    println!("Dist to end: {}",resolve_dist(&parent,end,start))
+                }
+//                if bx==x&&by==y
+//                {
+//                }
+            }
         }
     }
-    for (c, p) in &key_copy {
-        key_map.insert(*c, bfs(add_key(0, *c), &maze, *c));
-    }
-    //We now want to remove key-door pairs that are not in the same quadrant
-    let mut total = 0;
-    for start_point in start_points{
-        let mut costs: HashMap<char, usize> = initial_bfs(&maze,start_point,true);
-        let mut key_keys_map: HashMap<(char, usize), usize> = HashMap::new();
-        let mut min_cost: usize = 10000000;
-        let mut dist: HashMap<(char, usize), usize> = HashMap::new();
-        for (c, map) in &costs {
-            let c_dist =
-                costs.get(c).unwrap() + distToGetKeys(*c, add_key(0, *c), &key_map, &mut key_keys_map);
-            min_cost = min_cost.min(c_dist);
-        }
-        total+=min_cost;
-    }
-    println!("Total cost: {}", total);
+//    maze.show();
+//    for ((ax,ay),(bx,by)) in &maze.tunnels {
+//        println!("({}, {}) <-> ({}, {})",*ax,*ay,*bx,*by);
+//    }
 }
 
 #[cfg(test)]
@@ -289,25 +205,7 @@ mod tests {
 
     #[test]
     fn test() -> Result<(), Box<dyn Error>> {
-        show_maze(&"data/maze.txt".to_string());
+        show_maze(&"data/portalmaze.txt".to_string());
         Ok(())
-    }
-    #[test]
-    fn more_keys_than_doors() {
-        let keys = add_key(add_key(add_key(0, 'd'), 'b'), 'c');
-        let doors = add_key(add_key(0, 'b'), 'c');
-        assert!(locks_keys(doors, keys));
-    }
-    #[test]
-    fn enough_keys() {
-        let keys = add_key(add_key(0, 'b'), 'c');
-        let doors = add_key(add_key(0, 'b'), 'c');
-        assert!(locks_keys(doors, keys));
-    }
-    #[test]
-    fn too_few_keys() {
-        let keys = add_key(add_key(0, 'b'), 'c');
-        let doors = add_key(add_key(add_key(0, 'd'), 'b'), 'c');
-        assert!(!locks_keys(doors, keys));
     }
 }

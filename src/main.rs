@@ -12,5 +12,5 @@ fn main() {
     }
     let filename: String = args[1].as_str().parse().unwrap();
     env::set_var("RUST_BACKTRACE", "1");
-    aoc::rogue::show_maze(&filename);
+    aoc::portal::show_maze(&filename);
 }

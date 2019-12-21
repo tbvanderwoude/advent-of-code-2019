@@ -8,7 +8,7 @@ pub fn load_program(filename: &String) -> Vec<i64> {
     for s in split {
         program.push(s.to_string().parse::<i64>().unwrap());
     }
-    while program.len() < 4096 {
+    while program.len() < 65536 {
         program.push(0);
     }
     return program;

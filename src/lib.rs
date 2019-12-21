@@ -13,3 +13,4 @@ pub mod space_image;
 pub mod vacuum;
 pub mod tractor;
 pub mod portal;
+pub mod spring_droid;

@@ -83,9 +83,9 @@ pub fn load_maze(filename: &String) -> Maze {
     }
 }
 
-pub fn show_maze(filename: &String) {
+pub fn run_maze(filename: &String, recursive: bool) ->usize {
     let maze: Maze = load_maze(filename);
-    explore_maze(maze);
+    explore_maze(maze,recursive)
 }
 fn resolve_dist(
     lineage: &HashMap<(usize, usize,usize), (usize, usize,usize)>,
@@ -94,13 +94,13 @@ fn resolve_dist(
 ) -> usize {
     let mut dist = 0;
     while lineage.contains_key(&node) && node != start {
-        println!("Next in lineage: ({}, {}, {})",node.0,node.1,node.2);
+        //println!("Next in lineage: ({}, {}, {})",node.0,node.1,node.2);
         node = *lineage.get(&node).unwrap();
         dist += 1;
     }
     dist
 }
-pub fn explore_maze(mut maze: Maze) {
+pub fn explore_maze(mut maze: Maze, recursive: bool) -> usize {
     let mut temp_map: HashMap<String,(usize,usize)> = HashMap::new();
     let mut start = (0,0);
     let mut end = (0,0);
@@ -173,10 +173,9 @@ pub fn explore_maze(mut maze: Maze) {
                 if !parent.contains_key(&(x, y,node.2)) {
                     parent.insert((x, y,node.2), node);
                     q.add((x, y,node.2));
-                    if node.2==0&&x==end.0&&y==end.1
+                    if (!recursive||node.2==0)&&x==end.0&&y==end.1
                     {
-                        println!("Dist to end: {}",resolve_dist(&parent,(end.0,end.1,0),(start.0,start.1,0)));
-                        break;
+                        return resolve_dist(&parent,(end.0,end.1,node.2),(start.0,start.1,0));
                     }
                 }
             }
@@ -198,20 +197,19 @@ pub fn explore_maze(mut maze: Maze) {
             }
         }
     }
-    maze.show();
-//    for ((ax,ay),(bx,by)) in &maze.tunnels {
-//        println!("({}, {}) <-> ({}, {})",*ax,*ay,*bx,*by);
-//    }
+    0
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use std::error::Error;
-
     #[test]
-    fn test() -> Result<(), Box<dyn Error>> {
-        show_maze(&"data/portalmaze.txt".to_string());
-        Ok(())
+    fn rec() {
+        assert_eq!(run_maze(&"data/portalmaze.txt".to_string(),true),6706);
+    }
+    #[test]
+    fn normal() {
+        assert_eq!(run_maze(&"data/portalmaze.txt".to_string(),false),608);
     }
 }

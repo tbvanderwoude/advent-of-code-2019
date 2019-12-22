@@ -2,7 +2,7 @@ use std::env;
 
 use aoc::rogue;
 use std::error::Error;
-use aoc::spring_droid::run_program;
+use aoc::space_cards::unshuffle_index;
 
 //use aoc::rogue;
 
@@ -13,6 +13,5 @@ fn main() {
     }
     let filename: String = args[1].as_str().parse().unwrap();
     env::set_var("RUST_BACKTRACE", "1");
-
-    run_program(&filename,"NOT C J\nAND H J\nNOT B T\nOR T J\nNOT A T\nOR T J\nAND D J\nRUN\n");
+    unshuffle_index("data/small_shuffle.txt",10,0,101741582076661,true);
 }

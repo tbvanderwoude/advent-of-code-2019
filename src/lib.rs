@@ -14,3 +14,4 @@ pub mod vacuum;
 pub mod tractor;
 pub mod portal;
 pub mod spring_droid;
+pub mod space_cards;

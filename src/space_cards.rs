@@ -69,18 +69,13 @@ pub fn load_instructions(filename: &str) -> Vec<Operation> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::error::Error;
-    #[test]
-    fn test() -> Result<(), Box<dyn Error>> {
-        load_instructions("data/card_instructions.txt");
-        Ok(())
-    }
+
     #[test]
     fn part_one_test()  {
         assert_eq!(part_one("data/card_instructions.txt"),5472);
     }
     #[test]
     fn alt_shuffle()  {
-        println!("{}",part_two("data/card_instructions.txt"));
+        assert_eq!(part_two("data/card_instructions.txt"),64586600795606);
     }
 }

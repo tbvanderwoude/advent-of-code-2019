@@ -1,46 +1,11 @@
-use std::fs;
-use std::io;
-
-pub fn load_program(filename: &str) -> Vec<i64> {
-    let contents = fs::read_to_string(filename).expect("Something went wrong reading the file");
-    let split = contents.split(",");
-    let mut program: Vec<i64> = vec![];
-    for s in split {
-        program.push(s.to_string().parse::<i64>().unwrap());
-    }
-    while program.len() < 65536 {
-        program.push(0);
-    }
-    return program;
-}
-
-pub struct DefaultComputer;
-
-impl Computer for DefaultComputer {
-    fn input(&mut self) -> i64 {
-        let mut ret = String::new();
-        match io::stdin().read_line(&mut ret) {
-            Ok(n) => match ret.trim().to_string().parse::<i64>() {
-                Ok(n) => return n,
-                Err(e) => return 0,
-            },
-            Err(error) => return 0,
-        }
-    }
-    fn output(&mut self, x: i64) {
-        println!("{}", x);
-    }
-}
-
-pub trait Computer {
-    fn input(&mut self) -> i64;
-    fn output(&mut self, x: i64);
-}
+use std::sync::mpsc::{Receiver, Sender};
+use std::time::Duration;
 
 pub fn run_int_code_on_computer(
     i: &mut usize,
     mem: &mut Vec<i64>,
-    robot: &mut dyn Computer,
+    in_channel: Receiver<i64>,
+    out_channel: Sender<i64>,
     print_debug: bool,
 ) -> i64 {
     let mut rel_base: i64 = 0;
@@ -58,7 +23,7 @@ pub fn run_int_code_on_computer(
             .chars()
             .map(|x| match x.to_digit(10) {
                 Some(d) => return d as i64,
-                None => return 0
+                None => return 0,
             })
             .collect();
         let len = chars.len();
@@ -125,7 +90,11 @@ pub fn run_int_code_on_computer(
                         rel_base = rel_base + arg1;
                     }
                 } else if opcode == 3 {
-                    let input: i64 = robot.input();
+                    let mut input: i64 = -1;
+                    let result = in_channel.try_recv();
+                    if result.is_ok() {
+                        input = result.unwrap();
+                    }
                     if mode1 == 0 {
                         mem[arg1 as usize] = input;
                     } else if mode1 == 2 {
@@ -137,7 +106,7 @@ pub fn run_int_code_on_computer(
                     } else if mode1 == 2 {
                         arg1 = mem[(rel_base + arg1) as usize];
                     }
-                    &robot.output(arg1);
+                    out_channel.send(arg1).unwrap();
                 }
                 *i += 2;
             }

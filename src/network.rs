@@ -50,19 +50,12 @@ pub fn view(mut program: Vec<i64>) ->i64 {
                 let packet = inputs[i].iter().take(2).collect::<Vec<i64>>();
                 if address.unwrap() == 255
                 {
-                    println!("NAT: ({}, {})",packet[0],packet[1]);
-                    old_x=nat_x;
-                    old_y=nat_y;
+                    //println!("NAT: ({}, {})",packet[0],packet[1]);
                     nat_x=packet[0];
                     nat_y=packet[1];
-                    if old_y==nat_y
-                    {
-                        println!("Duplicate Y: {}",nat_y);
-                        return nat_y;
-                    }
                 }
                 else {
-                    println!("({}, {}) to {} from {}",packet[0],packet[1],address.unwrap(),i);
+                    //println!("({}, {}) to {} from {}",packet[0],packet[1],address.unwrap(),i);
                     outputs[address.unwrap() as usize].send(packet[0]);
                     outputs[address.unwrap() as usize].send(packet[1]);
                 }
@@ -78,8 +71,15 @@ pub fn view(mut program: Vec<i64>) ->i64 {
         }
         if idle_count>100000
         {
+            if old_y==nat_y
+            {
+                //println!("Duplicate Y: {}",nat_y);
+                return nat_y;
+            }
             outputs[0].send(nat_x);
             outputs[0].send(nat_y);
+            old_x=nat_x;
+            old_y=nat_y;
             idle_count=0;
         }
     }

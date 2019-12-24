@@ -34,7 +34,7 @@ mod conway{
         count
     }
 
-    pub fn simulate_life()
+    pub fn simulate_life() ->i32
     {
         let mut world_set:HashSet<i32> = HashSet::new();
         let mut world:i32= 0b00000001110000001010101110100011;
@@ -61,40 +61,27 @@ mod conway{
                 }
             }
             world=new_world;
-            for y in 0..5{
-                for x in 0..5{
-                    if get_bit_xy(world,x,y)
-                    {
-                        print!("#");
-                    }
-                    else {
-                        print!(".");
-                    }
-                }
-                println!();
-            }
             if world_set.contains(&world)
             {
-                println!("{}",world);
                 break;
             }
             else {
                 world_set.insert(world);
             }
         }
+        return world;
     }
     #[cfg(test)]
     mod tests {
         use super::*;
         #[test]
         fn part_one_test()  {
-            simulate_life();
+            assert_eq!(simulate_life(),18350099);
         }
         #[test]
         fn rem_test()
         {
             let mut str:i32= 0b00000001110000001010101110100011;
-            //assert_eq!(0b00000001110000001010101110100010,rem_bit_xy(str,0,0,));
             assert_eq!(0b00000001110000001010101110000011,rem_bit_xy(str,0,1,));
             assert_eq!(0b00000001110000001010101100100011,rem_bit_xy(str,2,1,));
         }
@@ -209,7 +196,7 @@ mod eris{
         }
     }
 
-    pub fn simulate_life() {
+    pub fn simulate_life() ->i32{
         let mut eris: Eris = Eris{world_stack: vec![0;400]};
         eris.world_stack[200]=0b1110000001010101110100011;
         for i in 0..200{
@@ -239,25 +226,6 @@ mod eris{
             }
             eris=new_eris;
         }
-        for z in 199..202{
-            println!("Depth: {}",z);
-            for y in 0..5{
-                for x in 0..5{
-                    if x==2&&y==2
-                    {
-                        print!("?");
-                    }
-                    else if eris.get_bit_xy(x,y,z)
-                    {
-                        print!("#");
-                    }
-                    else {
-                        print!(".");
-                    }
-                }
-                println!();
-            }
-        }
         let mut count=0;
         for z in 0..400{
             for x in 0..5{
@@ -269,14 +237,14 @@ mod eris{
                 }
             }
         }
-        println!("Across all 400 levels, there are {} bugs",count);
+        count
     }
     #[cfg(test)]
     mod tests {
         use super::*;
         #[test]
         fn part_two_test()  {
-            simulate_life();
+            assert_eq!(simulate_life(),2037);
         }
         #[test]
         fn neigh_test(){
@@ -292,14 +260,6 @@ mod eris{
         fn inner_test(){
             let mut eris: Eris = Eris{world_stack: vec![0;200]};
             eris.world_stack[1]=0b1111111111110111111111111;
-            assert_eq!(eris.neighbours_xy(1,2,1),3);
-            assert_eq!(eris.neighbours_xy(2,3,1),3);
-        }
-        #[test]
-        fn edge_test(){
-            let mut eris: Eris = Eris{world_stack: vec![0;200]};
-            eris.world_stack[1]=0b1111111111110111111111111;
-            eris.world_stack[2]=0b0000100001000010000100001;
             assert_eq!(eris.neighbours_xy(1,2,1),3);
             assert_eq!(eris.neighbours_xy(2,3,1),3);
         }

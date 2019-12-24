@@ -69,7 +69,7 @@ pub fn view(mut program: Vec<i64>) ->i64 {
         else {
             idle_count=0;
         }
-        if idle_count>100000
+        if idle_count>10000
         {
             if old_y==nat_y
             {

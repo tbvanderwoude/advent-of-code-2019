@@ -17,3 +17,4 @@ pub mod spring_droid;
 pub mod space_cards;
 pub mod network;
 pub mod network_intcode;
+pub mod life;

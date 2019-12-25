@@ -138,8 +138,6 @@ mod eris{
                     count+=1;
                 }
             }
-
-
             if x==1&&y==2
             {
                 for i in 0..5{

@@ -18,3 +18,4 @@ pub mod space_cards;
 pub mod network;
 pub mod network_intcode;
 pub mod life;
+pub mod cryobot;

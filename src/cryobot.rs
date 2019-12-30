@@ -66,7 +66,7 @@ impl SpringDroid {
     }
 }
 
-pub fn run_program(filename: &String) -> i64{
+pub fn run_program(filename: &str) -> i64{
     let (comp_out, main_in): (Sender<i64>, Receiver<i64>) = channel();
     let (main_out, comp_in): (Sender<i64>, Receiver<i64>) = channel();
     let mut explorer: SpringDroid = SpringDroid {
@@ -87,17 +87,4 @@ pub fn run_program(filename: &String) -> i64{
         );
     });
     explorer.execute_program()
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use std::error::Error;
-    #[test]
-    fn run() {
-        run_program(&"data/intcode/cryobot.txt".to_string());
-    }
-    #[test]
-    fn walk() {
-    }
 }

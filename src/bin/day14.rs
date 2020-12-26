@@ -1,3 +1,7 @@
+use aoc::common::parse_numbers;
+use std::io;
+use std::io::Read;
+
 use std::collections::HashMap;
 use std::fs;
 
@@ -81,19 +85,18 @@ pub fn search(conversions: &HashMap<String, Conversion>, i: i64, j: i64) -> i64 
     }
 }
 
-pub fn compute_max_fuel(filename: &String) -> i64 {
-    let conversions = load_conversions(filename);
+pub fn compute_max_fuel(input: String) -> i64 {
+    let conversions = load_conversions(input);
     return search(&conversions, 0, 10000000);
 }
 
-pub fn compute_fuel_ore(filename: &String) -> i64 {
-    let conversions = load_conversions(filename);
+pub fn compute_fuel_ore(input: String) -> i64 {
+    let conversions = load_conversions(input);
     return compute_ore_for_fuel(&conversions, 1);
 }
 
-pub fn load_conversions(filename: &String) -> HashMap<String, Conversion> {
-    let contents = fs::read_to_string(filename).expect("Something went wrong reading the file");
-    let split = contents.split("\n");
+pub fn load_conversions(input: String) -> HashMap<String, Conversion> {
+    let split = input.split("\n");
     let mut conversions = HashMap::new();
     let rg = Regex::new(r"(\d+ [[:alpha:]]+)").unwrap();
     for s in split {
@@ -115,4 +118,12 @@ pub fn load_conversions(filename: &String) -> HashMap<String, Conversion> {
         );
     }
     return conversions;
+}
+
+fn main() {
+    let mut input = String::new();
+    io::stdin().read_to_string(&mut input).unwrap();
+    let part1 = compute_fuel_ore(input.clone());
+    let part2 = compute_max_fuel(input.clone());
+    println!("Part 1: {}\nPart 2: {}", part1, part2);
 }

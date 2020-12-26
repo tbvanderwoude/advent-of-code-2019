@@ -1,7 +1,7 @@
+use aoc::common::parse_numbers;
+use std::io;
+use std::io::Read;
 extern crate regex;
-
-use std::fs;
-
 use regex::Regex;
 
 #[derive(Clone, Copy)]
@@ -118,8 +118,7 @@ pub fn gcd(mut a: i64, mut b: i64) -> i64 {
     return a;
 }
 
-pub fn load_moons(filename: &String) -> Vec<Moon> {
-    let contents = fs::read_to_string(filename).expect("Something went wrong reading the file");
+pub fn load_moons(contents: String) -> Vec<Moon> {
     let split = contents.split("\n");
     let mut moons = vec![];
     let rg = Regex::new(r"x=(-?\d+), y=(-?\d+), z=(-?\d+)").unwrap();
@@ -135,4 +134,17 @@ pub fn load_moons(filename: &String) -> Vec<Moon> {
         });
     }
     return moons;
+}
+
+fn main() {
+    let mut input = String::new();
+    io::stdin().read_to_string(&mut input).unwrap();
+    let mut moons = load_moons(input);
+    let mut sim_copy = moons.clone();
+    for _ in 0..1000{
+        simulate_moons(&mut sim_copy);
+    }
+    let part1: i32 = sim_copy.iter().map(|m| m.compute_energy()).sum();
+    let part2 = full_alignment(moons);
+    println!("Part 1: {}\nPart 2: {}", part1, part2);
 }

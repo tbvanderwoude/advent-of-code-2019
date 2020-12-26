@@ -1,11 +1,15 @@
+use aoc::common::parse_numbers;
+use std::io;
+use std::io::Read;
 use console::Term;
 
-use crate::intcode;
-use crate::intcode::Computer;
 use std::collections::HashMap;
 use std::thread;
 use std::time::Duration;
+use aoc::intcode;
+use aoc::intcode::{Computer, load_program};
 
+#[derive(Clone)]
 pub struct Cabinet {
     pub term: console::Term,
     pub map: HashMap<(i64, i64), i64>,
@@ -15,40 +19,11 @@ pub struct Cabinet {
     pub paddle_y: i64,
     pub ball_x: i64,
     pub ball_y: i64,
+    pub score: i64,
+    pub headless: bool,
     pub autoplay: bool,
     pub game_exiting: bool,
 }
-
-pub fn render_screen(mut program: Vec<i64>) {
-    let mut counter: usize = 0;
-    let mut arcade: Cabinet = Cabinet {
-        autoplay: true,
-        term: Term::stdout(),
-        map: HashMap::new(),
-        new_x: -42,
-        new_y: -42,
-        game_exiting: false,
-        ball_x: -1,
-        ball_y: -1,
-        paddle_x: -1,
-        paddle_y: -1,
-    };
-    program[0] = 2;
-    println!(
-        "{}",
-        intcode::run_int_code_on_computer(&mut counter, &mut program, &mut arcade, false)
-    );
-    println!(
-        "{}",
-        arcade
-            .map
-            .iter()
-            .map(|(&k, &v)| v)
-            .filter(|v| *v == 2)
-            .fold(0, |a, b| a + b / 2)
-    );
-}
-
 impl Cabinet {
     fn render(&mut self) {
         self.term.clear_screen();
@@ -71,8 +46,10 @@ impl Cabinet {
 
 impl Computer for Cabinet {
     fn input(&mut self) -> i64 {
-        self.render();
-        thread::sleep(Duration::from_millis(20));
+        if !self.headless{
+            self.render();
+            thread::sleep(Duration::from_millis(20));
+        }
 
         if self.autoplay {
             if self.paddle_x < self.ball_x {
@@ -98,7 +75,7 @@ impl Computer for Cabinet {
             self.new_y = num;
         } else {
             if self.new_x == -1 && self.new_y == 0 {
-                println!("The player scored {} points", num);
+                self.score = num;
                 self.new_x = -42;
                 self.new_y = -42;
             } else {
@@ -116,4 +93,39 @@ impl Computer for Cabinet {
             }
         }
     }
+}
+
+fn main() {
+    let mut input = String::new();
+    io::stdin().read_to_string(&mut input).unwrap();
+    let mut program = load_program(input);
+
+    let mut counter: usize = 0;
+    let mut arcade: Cabinet = Cabinet {
+        autoplay: true,
+        term: Term::stdout(),
+        map: HashMap::new(),
+        new_x: -42,
+        new_y: -42,
+        headless: true,
+        game_exiting: false,
+        score: 0,
+        ball_x: -1,
+        ball_y: -1,
+        paddle_x: -1,
+        paddle_y: -1,
+    };
+    let mut prog_cln = program.clone();
+    intcode::run_int_code_on_computer(&mut counter, &mut prog_cln, &mut arcade, false);
+    let part1 = arcade
+        .map
+        .iter()
+        .map(|(&k, &v)| v)
+        .filter(|v| *v == 2)
+        .count();
+    counter = 0;
+    program[0] = 2;
+    intcode::run_int_code_on_computer(&mut counter, &mut program, &mut arcade, false);
+    let part2 = arcade.score;
+    println!("Part 1: {}\nPart 2: {}", part1, part2);
 }

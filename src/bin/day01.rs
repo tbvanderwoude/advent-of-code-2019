@@ -6,7 +6,7 @@ pub fn total_fuel(weights: &Vec<i32>, rec: bool) -> i32 {
     weights
         .iter()
         .map(|x| fuel_cost(x, rec))
-        .fold(0, |a, b| a + b)
+        .sum()
 }
 pub fn fuel_cost(arg: &i32, rec: bool) -> i32 {
     let fuel = arg / 3 - 2;

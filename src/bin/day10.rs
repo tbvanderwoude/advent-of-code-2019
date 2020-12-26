@@ -1,7 +1,8 @@
+use aoc::common::parse_numbers;
+use std::io;
+use std::io::Read;
 use std::collections::HashMap;
-use std::fs;
 use std::hash::Hash;
-
 const TWO_PI: f32 = 2.0f32 * std::f32::consts::PI;
 
 #[derive(PartialEq, Eq, Hash, Copy, Clone)]
@@ -10,8 +11,7 @@ pub struct Asteroid {
     y: i32,
 }
 
-pub fn load_asteroids(filename: &String) -> Vec<Asteroid> {
-    let contents = fs::read_to_string(filename).expect("Something went wrong reading the file");
+pub fn load_asteroids(contents: String) -> Vec<Asteroid> {
     let split = contents.split("\n");
     let mut asteroids: Vec<Asteroid> = vec![];
     for (y, s) in split.enumerate() {
@@ -24,28 +24,12 @@ pub fn load_asteroids(filename: &String) -> Vec<Asteroid> {
             }
         }
     }
-    for aster in &asteroids {
-        //println!("Asteroid at ({0}, {1})",aster.x,aster.y);
-    }
     return asteroids;
 }
 
-pub fn compute_two_hundreth_coord(mut asteroids: Vec<Asteroid>) -> i32 {
-    let mut max_visible: usize = 0;
-    let mut center_id: usize = 0;
-    let mut map = HashMap::new();
-    for (i, center) in (&asteroids).iter().enumerate() {
-        let mut visible_map = compute_visible_asteroids(*center, &asteroids);
-        if visible_map.len() > max_visible {
-            max_visible = visible_map.len();
-            center_id = i;
-            map = visible_map;
-        }
-    }
-    let center: Asteroid = asteroids[center_id];
-    let mut dist_asteroids = vec![];
-    asteroids.remove(center_id);
-    for (key, asteroid) in map {
+pub fn compute_two_hundreth_coord(center: Asteroid,map: HashMap<(i32, i32), Asteroid>) -> i32 {
+    let mut dist_asteroids: Vec<(f32,Asteroid)> = vec![];
+    for (_, asteroid) in map {
         let mut angle: f32 = -(((asteroid.y - center.y) as f32)
             .atan2(-(asteroid.x - center.x) as f32))
             - 2f32 * TWO_PI / 8f32;
@@ -56,20 +40,11 @@ pub fn compute_two_hundreth_coord(mut asteroids: Vec<Asteroid>) -> i32 {
     }
 
     dist_asteroids.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
-
-    //println!("The center is at ({0}, {1})",center.x,center.y);
-    for (angle, asteroid) in &dist_asteroids {
-        //println!("Asteroid at ({0}, {1}) (rel ({3}, {4}) with angle of {2})", asteroid.x, asteroid.y,angle,asteroid.x-center.x,asteroid.y-center.y);
-    }
     let mut ordered_asteroids: Vec<Asteroid> = dist_asteroids.iter().map(|a| a.1).collect();
     ordered_asteroids.reverse();
-
-    //print!("There are {0} asteroids visible from Asteroid #{1}",maxVisible,centerId);
-
     let mut removed_index = 1;
-    let mut coord_code = 0;
     while removed_index < 200 {
-        let aster = ordered_asteroids.pop().unwrap();
+        ordered_asteroids.pop().unwrap();
         removed_index += 1;
     }
     let two_hundreth_asteroid: Asteroid = ordered_asteroids.pop().unwrap();
@@ -107,4 +82,16 @@ fn compute_visible_asteroids(
         }
     }
     visible_map
+}
+
+fn main() {
+    let mut input = String::new();
+    io::stdin().read_to_string(&mut input).unwrap();
+    let mut asteroids = load_asteroids(input);
+    let coord = asteroids.iter().enumerate().map(|(i,a)|
+        (i,*a,compute_visible_asteroids(*a,&asteroids))).max_by_key(|t|(*t).2.len()).unwrap();
+    let part1 = coord.2.len();
+    asteroids.remove(coord.0);
+    let part2 = compute_two_hundreth_coord(coord.1,coord.2);
+    println!("Part 1: {}\nPart 2: {}", part1, part2);
 }

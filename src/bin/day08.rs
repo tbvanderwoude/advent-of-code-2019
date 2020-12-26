@@ -1,4 +1,11 @@
+use aoc::intcode::{load_program, run_int_code_on_computer, ChannelComputer, TestComputer};
+use permutohedron;
+use permutohedron::Heap;
+use std::cmp::max;
 use std::fs;
+use std::io::Read;
+use std::sync::mpsc::{channel, Receiver, RecvError, Sender};
+use std::{env, io, thread};
 
 pub fn min_zero_code(layers: &Vec<String>) -> i32 {
     let mut min_layer: usize = 0;
@@ -15,8 +22,7 @@ pub fn min_zero_code(layers: &Vec<String>) -> i32 {
     return (one_count * two_count) as i32;
 }
 
-pub fn load_image_layers(filename: &String) -> Vec<String> {
-    let mut contents = fs::read_to_string(filename).expect("Something went wrong reading the file");
+pub fn load_image_layers(mut contents: String) -> Vec<String> {
     let layer_size = 25 * 6;
     let mut layers: Vec<String> = vec![];
     while !contents.is_empty() {
@@ -33,11 +39,24 @@ pub fn render(layers: &Vec<String>) {
             for layer in layers {
                 let c = layer.chars().nth(y * 25 + x).unwrap();
                 if c != '2' {
-                    print!("{}", c);
+                    if c=='0'{
+                        print!(".");
+                    }
+                    else{
+                        print!("{}", c);
+                    }
                     break;
                 }
             }
         }
         print!("\n");
     }
+}
+fn main() {
+    let mut input = String::new();
+    io::stdin().read_to_string(&mut input).unwrap();
+    let layers = load_image_layers(input);
+    let part1 = min_zero_code(&layers);
+    println!("Part 1: {}\nPart2:", part1);
+    render(&layers);
 }

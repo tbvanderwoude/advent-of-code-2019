@@ -1,6 +1,7 @@
 use std::collections::HashMap;
-use std::fs;
+use std::{fs, io};
 use queues::*;
+use std::io::Read;
 
 #[derive(Clone)]
 pub struct Maze {
@@ -32,6 +33,27 @@ impl Maze {
         }
         neighbours
     }
+    fn separate_quadrants(&mut self){
+        for y in 0..self.height {
+            for x in 0..self.width {
+                if self.get(x, y) == '@' {
+                    assert!(x>0);
+                    assert!(y>0);
+                    for dx in 0..3{
+                        for dy in 0..3{
+                            if dx%2 == 0 && dy%2 == 0{
+                                self.set(x+dx-1,y+dy-1,'@');
+                            }
+                            else{
+                                self.set(x+dx-1,y+dy-1,'#');
+                            }
+                        }
+                    }
+                    return
+                }
+            }
+        }
+    }
     fn has_key(&self, x: usize, y: usize) -> bool {
         self.get(x, y) >= 'a' && self.get(x, y) <= 'z'
     }
@@ -43,12 +65,6 @@ impl Maze {
             println!("{}", self.map[y].iter().collect::<String>());
         }
         println!("doors: {}, keys: {}", &self.doors.len(), &self.keys.len());
-        for (k, v) in &self.doors {
-            //println!("Door {}, is at ({}, {})",k,v.0,v.1);
-        }
-        for (k, v) in &self.keys {
-            //println!("Key {}, is at ({}, {})",k,v.0,v.1);
-        }
     }
 
     fn valid(&self, x: usize, y: usize) -> bool {
@@ -62,12 +78,10 @@ impl Maze {
     }
 }
 
-pub fn load_maze(filename: &String) -> Maze {
-    let contents = fs::read_to_string(filename).expect("Something went wrong reading the file");
+pub fn load_maze(contents: String) -> Maze {
     let split = contents.split("\n");
     let mut maze: Vec<Vec<char>> = vec![];
     let mut y = 0;
-    let mut x = 0;
     for s in split {
         maze.push(vec![]);
         for c in s.chars() {
@@ -83,11 +97,6 @@ pub fn load_maze(filename: &String) -> Maze {
         doors: HashMap::new(),
         start: (0, 0),
     }
-}
-
-pub fn show_maze(filename: &String) {
-    let maze: Maze = load_maze(filename);
-    explore_maze(maze);
 }
 
 fn resolve_dist(
@@ -228,7 +237,7 @@ pub fn dist_to_get_keys(
     }
 }
 
-pub fn explore_maze(mut maze: Maze) {
+pub fn explore_maze(mut maze: Maze) -> usize{
     let i: i32 = 0;
     let mut start_points: Vec<(usize,usize)> = Vec::new();
     for y in 0..maze.height {
@@ -272,35 +281,16 @@ pub fn explore_maze(mut maze: Maze) {
         }
         total+=min_cost;
     }
-    println!("Total cost: {}", total);
+    total
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use std::error::Error;
-
-    #[test]
-    fn test() -> Result<(), Box<dyn Error>> {
-        show_maze(&"input/maze.txt".to_string());
-        Ok(())
-    }
-    #[test]
-    fn more_keys_than_doors() {
-        let keys = add_key(add_key(add_key(0, 'd'), 'b'), 'c');
-        let doors = add_key(add_key(0, 'b'), 'c');
-        assert!(locks_keys(doors, keys));
-    }
-    #[test]
-    fn enough_keys() {
-        let keys = add_key(add_key(0, 'b'), 'c');
-        let doors = add_key(add_key(0, 'b'), 'c');
-        assert!(locks_keys(doors, keys));
-    }
-    #[test]
-    fn too_few_keys() {
-        let keys = add_key(add_key(0, 'b'), 'c');
-        let doors = add_key(add_key(add_key(0, 'd'), 'b'), 'c');
-        assert!(!locks_keys(doors, keys));
-    }
+fn main() {
+    let mut input = String::new();
+    io::stdin().read_to_string(&mut input).unwrap();
+    let maze: Maze = load_maze(input);
+    let mut multi_maze = maze.clone();
+    multi_maze.separate_quadrants();
+    let part1 = explore_maze(maze);
+    let part2 = explore_maze(multi_maze);
+    println!("Part 1: {}\nPart 2: {}", part1, part2);
 }

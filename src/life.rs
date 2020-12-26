@@ -255,7 +255,7 @@ mod eris{
             assert_eq!(eris.neighbours_xy(2,3,1),3);
         }
         #[test]
-        fn inner_test(){
+        fn inner_test() {
             let mut eris: Eris = Eris{world_stack: vec![0;200]};
             eris.world_stack[1]=0b1111111111110111111111111;
             assert_eq!(eris.neighbours_xy(1,2,1),3);

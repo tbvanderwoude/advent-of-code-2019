@@ -1,3 +1,7 @@
+use aoc::common::parse_numbers;
+use std::io;
+use std::io::Read;
+
 use std::collections::{BinaryHeap, HashMap};
 use std::hash::Hash;
 use std::time::Duration;
@@ -56,8 +60,7 @@ impl Maze {
     }
 }
 
-pub fn load_maze(filename: &String) -> Maze {
-    let contents = fs::read_to_string(filename).expect("Something went wrong reading the file");
+pub fn load_maze(contents: String) -> Maze {
     let split = contents.split("\n");
     let mut maze: Vec<Vec<char>> = vec![];
     let mut y = 0;
@@ -83,8 +86,8 @@ pub fn load_maze(filename: &String) -> Maze {
     }
 }
 
-pub fn run_maze(filename: &String, recursive: bool) ->usize {
-    let maze: Maze = load_maze(filename);
+pub fn run_maze(contents: String, recursive: bool) ->usize {
+    let maze: Maze = load_maze(contents);
     explore_maze(maze,recursive)
 }
 fn resolve_dist(
@@ -94,7 +97,6 @@ fn resolve_dist(
 ) -> usize {
     let mut dist = 0;
     while lineage.contains_key(&node) && node != start {
-        //println!("Next in lineage: ({}, {}, {})",node.0,node.1,node.2);
         node = *lineage.get(&node).unwrap();
         dist += 1;
     }
@@ -127,7 +129,6 @@ pub fn explore_maze(mut maze: Maze, recursive: bool) -> usize {
                                 maze.set(letter_neigh.0,letter_neigh.1,'#');
                             }
                         }
-//                        println!("({}, {}) has a portal: {}",x,y,portal_name);
                         maze.set(neigh.0,neigh.1,'#');
                         if portal_name=="AA"
                         {
@@ -200,16 +201,10 @@ pub fn explore_maze(mut maze: Maze, recursive: bool) -> usize {
     0
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use std::error::Error;
-    #[test]
-    fn rec() {
-        assert_eq!(run_maze(&"input/portalmaze.txt".to_string(),true),6706);
-    }
-    #[test]
-    fn normal() {
-        assert_eq!(run_maze(&"input/portalmaze.txt".to_string(),false),608);
-    }
+fn main() {
+    let mut input = String::new();
+    io::stdin().read_to_string(&mut input).unwrap();
+    let part1 = run_maze(input.clone(), false);
+    let part2 = run_maze(input.clone(), true);
+    println!("Part 1: {}\nPart 2: {}", part1, part2);
 }

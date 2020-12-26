@@ -1,13 +1,13 @@
+use aoc::common::parse_numbers;
+use std::io;
+use std::io::Read;
 extern crate petgraph;
 extern crate rand;
-
 use std::collections::HashMap;
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread;
-
 use console::Term;
-
-use crate::async_intcode;
+use aoc::intcode::{load_program, run_int_code_on_computer, ChannelComputer};
 
 pub struct Tractor {
     in_channel: Receiver<i64>,
@@ -33,7 +33,6 @@ impl Tractor {
                 self.map.insert((self.x, self.y), info);
                 break;
             }
-            //self.render();
         }
         self.count
     }
@@ -46,8 +45,6 @@ impl Tractor {
             let min_x = *self.map.keys().map(|(a, b)| a).min().unwrap();
             let min_y = *self.map.keys().map(|(a, b)| b).min().unwrap();
             let w = (max_x - min_x) as usize;
-            let h = (max_y - min_y) as usize;
-
             for y in min_y..max_y {
                 let mut line: Vec<char> = vec![' '; w + 2];
                 for x in min_x..max_x {
@@ -74,20 +71,24 @@ pub fn deploy(mut program: Vec<i64>, x: i64, y: i64) -> i64 {
         out_channel: main_out,
         term: Term::stdout(),
         map: HashMap::new(),
-        x: x,
-        y: y,
+        x,
+        y,
         count: 0,
+    };
+    let mut comp = ChannelComputer {
+        receiver: comp_in,
+        sender: comp_out,
     };
     thread::spawn(move || {
         let mut iterator = 0;
-        async_intcode::run_int_code_on_computer(
+        run_int_code_on_computer(
             &mut iterator,
             &mut program,
-            comp_in,
-            comp_out,
+            &mut comp,
             false,
         );
     });
+
     explorer.explore()
 }
 
@@ -107,10 +108,19 @@ fn vert_fits(mut program: Vec<i64>, cursor_x: i64, cursor_y: i64) -> bool {
     y_fits
 }
 
-pub fn view(mut program: Vec<i64>) {
-    let mut total = 0;
-    let mut buh = true;
+fn check_beam_start(program: &Vec<i64>) -> usize {
+    let mut count = 0;
+    for x in 0..50{
+        for y in 0..50{
+            if check(program.clone(),x,y){
+                count+=1;
+            }
+        }
+    }
+    return count;
+}
 
+pub fn fit_rectangle(program: &Vec<i64>) -> i64{
     let mut cursor_x = 0;
     let mut cursor_y = 10;
     let size = 100;
@@ -123,46 +133,18 @@ pub fn view(mut program: Vec<i64>) {
             cursor_x += 1;
         }
         if check(program.clone(), cursor_x + size_min, cursor_y - size_min) {
-            println!(
-                "({}, {}) fits: {}",
-                cursor_x,
-                cursor_y - size_min,
-                cursor_x * 10000 + cursor_y - size_min
-            );
-            break;
-        } else {
+            return cursor_x * 10000 + (cursor_y - size_min);
         }
         cursor_y += 1;
     }
-    for y in (cursor_y - size - 3)..(cursor_y + 1) {
-        let mut line = false;
-        for x in (cursor_x)..(cursor_x + size + 3) {
-            if (y as f32) < 1.01f32 * (x as f32) {
-                let res = deploy(program.clone(), x, y);
-                if res == 1 {
-                    if x == cursor_x && y == cursor_y {
-                        print!("x");
-                    } else {
-                        print!("{}", res);
-                    }
-                    line = true;
-                } else if res == 0 && line {
-                    break;
-                } else if (x - 1) == y {
-                    print!("x");
-                } else {
-                    print!("{}", res);
-                }
-                if x == 99 && res == 1 && !buh {
-                    buh = true;
-                    println!("Coords({}, {})", x, y);
-                }
-                total += res;
-            } else {
-                print!(" ");
-            }
-        }
-        println!();
-    }
-    println!("Grand total: {}", total);
+    return -1;
+}
+
+fn main() {
+    let mut input = String::new();
+    io::stdin().read_to_string(&mut input).unwrap();
+    let program = load_program(input);
+    let part1 = check_beam_start(&program);
+    let part2 = fit_rectangle(&program);
+    println!("Part 1: {}\nPart 2: {}", part1, part2);
 }

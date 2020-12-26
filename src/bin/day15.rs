@@ -1,3 +1,6 @@
+use aoc::common::parse_numbers;
+use std::io;
+use std::io::Read;
 extern crate petgraph;
 extern crate rand;
 
@@ -7,21 +10,22 @@ use std::thread;
 use console::Term;
 use petgraph::{Graph, Undirected};
 
-use crate::async_intcode;
+use aoc::intcode::{load_program, ChannelComputer, run_int_code_on_computer};
 
 pub struct Explorer {
     in_channel: Receiver<i64>,
     out_channel: Sender<i64>,
     term: console::Term,
+    oxygen: (i64,i64),
     x: i64,
     y: i64,
     map: HashMap<(i64, i64), i64>,
 }
 
 impl Explorer {
-    fn explore(&mut self) {
+    fn explore(&mut self) -> usize {
         let mut i: i32 = 0;
-        let mut oxygen = (0, 0);
+        let mut moves_to_oxygen = 0;
         let mut breadcrumbs: Vec<i64> = vec![];
         loop {
             let mut mov_instr = 0;
@@ -40,8 +44,6 @@ impl Explorer {
             } else {
                 let last_move = breadcrumbs.pop();
                 if last_move.is_none() {
-                    println!("Finished exploring");
-                    self.render();
                     break;
                 } else {
                     mov_instr = last_move.unwrap();
@@ -52,7 +54,6 @@ impl Explorer {
                 let res = self.in_channel.recv();
                 if res.is_ok() {
                     let info = res.unwrap();
-                    //println!("Received info: {}",info);
                     let mut next_x = self.x;
                     let mut next_y = self.y;
                     match mov_instr {
@@ -65,8 +66,8 @@ impl Explorer {
 
                     if info != 0 {
                         if info == 2 {
-                            oxygen = (next_x, next_y);
-                            println!("Steps to oxygen: {}", breadcrumbs.len());
+                            self.oxygen = (next_x, next_y);
+                            moves_to_oxygen = breadcrumbs.len();
                         }
                         self.x = next_x;
                         self.y = next_y;
@@ -79,7 +80,9 @@ impl Explorer {
             }
             i += 1;
         }
-        println!("Let's build a graph!");
+        moves_to_oxygen
+    }
+    fn spread_oxygen(&self) -> usize{
         let mut nodes = HashMap::new();
         let mut g: Graph<(i64, i64), f64, Undirected> = Graph::new_undirected();
         for (k, v) in self.map.iter() {
@@ -87,66 +90,40 @@ impl Explorer {
                 nodes.insert(k, g.add_node(*k));
             }
         }
-        let oxygen_node = *(nodes.get(&oxygen).unwrap());
+        let oxygen_node = *(nodes.get(&self.oxygen).unwrap());
         for ((x, y), v) in nodes.iter() {
-            if nodes.contains_key(&(*x - 1, *y)) {
-                g.add_edge(
-                    *(nodes.get(&(*x, *y)).unwrap()),
-                    *(nodes.get(&(*x - 1, *y)).unwrap()),
-                    1f64,
-                );
-            }
-            if nodes.contains_key(&(*x + 1, *y)) {
-                g.add_edge(
-                    *(nodes.get(&(*x, *y)).unwrap()),
-                    *(nodes.get(&(*x + 1, *y)).unwrap()),
-                    1f64,
-                );
-            }
-            if nodes.contains_key(&(*x, *y - 1)) {
-                g.add_edge(
-                    *(nodes.get(&(*x, *y)).unwrap()),
-                    *(nodes.get(&(*x, *y - 1)).unwrap()),
-                    1f64,
-                );
-            }
-            if nodes.contains_key(&(*x, *y + 1)) {
-                g.add_edge(
-                    *(nodes.get(&(*x, *y)).unwrap()),
-                    *(nodes.get(&(*x, *y + 1)).unwrap()),
-                    1f64,
-                );
+            for (dx,dy) in [(-1,0),(1,0),(0,-1),(0,1)].iter() {
+                if nodes.contains_key(&(*x + dx, *y+dy)) {
+                    g.add_edge(
+                        *(nodes.get(&(*x, *y)).unwrap()),
+                        *(nodes.get(&(*x +dx, *y+dy)).unwrap()),
+                        1f64,
+                    );
+                }
             }
         }
-        let mut max_dist: f64 = -1f64;
-        for x in petgraph::algo::bellman_ford(&g, oxygen_node).unwrap().0 {
-            if x > max_dist {
-                max_dist = x;
-            }
-        }
-        println!("{:?}", max_dist);
+        petgraph::algo::bellman_ford(&g, oxygen_node).unwrap().0.iter().map(|&x|x as usize).max().unwrap()
     }
+
 
     fn render(&mut self) {
         self.term.clear_screen();
         if !self.map.is_empty() {
-            let max_x = *self.map.keys().map(|(a, b)| a).max().unwrap() + 3;
-            let max_y = *self.map.keys().map(|(a, b)| b).max().unwrap() + 3;
-            let min_x = *self.map.keys().map(|(a, b)| a).min().unwrap() - 3;
-            let min_y = *self.map.keys().map(|(a, b)| b).min().unwrap() - 3;
+            let max_x = self.map.keys().max_by_key(|x|x.0).unwrap().0 + 3;
+            let max_y = self.map.keys().max_by_key(|x|x.1).unwrap().1 + 3;
+            let min_x = self.map.keys().min_by_key(|x|x.0).unwrap().0 - 3;
+            let min_y = self.map.keys().min_by_key(|x|x.1).unwrap().1 - 3;
             let w = (max_x - min_x) as usize;
-            let h = (max_y - min_y) as usize;
-
             for y in min_y..max_y {
                 let mut line: Vec<char> = vec!['#'; w + 2];
                 for x in min_x..max_x {
                     if self.map.contains_key(&(x, y)) {
-                        match *self.map.get(&(x, y)).unwrap() {
-                            0 => line[(x - min_x) as usize] = '■',
-                            1 => line[(x - min_x) as usize] = ' ',
-                            2 => line[(x - min_x) as usize] = 'X',
-                            _ => line[(x - min_x) as usize] = '#',
-                        }
+                        line[(x - min_x) as usize] = match *self.map.get(&(x, y)).unwrap() {
+                            0 => '■',
+                            1 => ' ',
+                            2 => 'X',
+                            _ => '#',
+                        };
                         if self.x == x && self.y == y {
                             line[(x - min_x) as usize] = '@';
                         } else if x == 0 && y == 0 {
@@ -160,26 +137,37 @@ impl Explorer {
     }
 }
 
-pub fn view(mut program: Vec<i64>) {
+fn main() {
+    let mut input = String::new();
+    io::stdin().read_to_string(&mut input).unwrap();
+    let mut program = load_program(input);
+
     let (comp_out, main_in): (Sender<i64>, Receiver<i64>) = channel();
     let (main_out, comp_in): (Sender<i64>, Receiver<i64>) = channel();
     let mut explorer: Explorer = Explorer {
         in_channel: main_in,
         out_channel: main_out,
+        oxygen: (0,0),
         term: Term::stdout(),
         map: HashMap::new(),
         x: 0,
         y: 0,
     };
+    let mut comp = ChannelComputer {
+        receiver: comp_in,
+        sender: comp_out,
+    };
     thread::spawn(move || {
         let mut iterator = 0;
-        async_intcode::run_int_code_on_computer(
+        run_int_code_on_computer(
             &mut iterator,
             &mut program,
-            comp_in,
-            comp_out,
+            &mut comp,
             false,
         );
     });
-    explorer.explore();
+    let part1 = explorer.explore();
+    let part2 = explorer.spread_oxygen();
+    explorer.render();
+    println!("Part 1: {}\nPart 2: {}", part1, part2);
 }

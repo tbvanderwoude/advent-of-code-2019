@@ -79,9 +79,9 @@ pub fn search(conversions: &HashMap<String, Conversion>, i: i64, j: i64) -> i64 
     let m = (i + j) / 2;
     let ore_needed = compute_ore_for_fuel(&conversions, m);
     if ore_needed <= 1000000000000 {
-        return search(conversions, m + 1, j);
+        search(conversions, m + 1, j)
     } else {
-        return search(conversions, i, m - 1);
+        search(conversions, i, m - 1)
     }
 }
 

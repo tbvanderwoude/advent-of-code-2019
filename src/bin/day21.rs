@@ -1,13 +1,12 @@
+use aoc::common::parse_numbers;
+use std::io;
+use std::io::Read;
 extern crate rand;
-
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread;
 use std::time::Duration;
-
 use console::Term;
-
-use crate::async_intcode;
-use crate::intcode;
+use aoc::intcode::{load_program, ChannelComputer, run_int_code_on_computer};
 
 pub struct SpringDroid {
     in_channel: Receiver<i64>,
@@ -67,7 +66,7 @@ impl SpringDroid {
     }
 }
 
-pub fn run_program(filename: &String, prog: &str) -> i64{
+pub fn run_program(program: &Vec<i64>, prog: &str) -> i64{
     let (comp_out, main_in): (Sender<i64>, Receiver<i64>) = channel();
     let (main_out, comp_in): (Sender<i64>, Receiver<i64>) = channel();
     let mut explorer: SpringDroid = SpringDroid {
@@ -76,30 +75,28 @@ pub fn run_program(filename: &String, prog: &str) -> i64{
         term: Term::stdout(),
         buffer: vec![],
     };
-    let mut program = intcode::load_program(filename);
+    let mut comp = ChannelComputer {
+        receiver: comp_in,
+        sender: comp_out,
+    };
+    let mut cln = program.clone();
     thread::spawn(move || {
         let mut iterator = 0;
-        async_intcode::run_int_code_on_computer(
+        run_int_code_on_computer(
             &mut iterator,
-            &mut program,
-            comp_in,
-            comp_out,
+            &mut cln,
+            &mut comp,
             false,
         );
     });
     explorer.execute_program(prog)
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use std::error::Error;
-    #[test]
-    fn run() {
-        assert_eq!(run_program(&"input/intcode/springdroid.txt".to_string(),"NOT C J\nAND H J\nNOT B T\nOR T J\nNOT A T\nOR T J\nAND D J\nRUN\n"),1141997803);
-    }
-    #[test]
-    fn walk() {
-        assert_eq!(run_program(&"input/intcode/springdroid.txt".to_string(),"NOT A J\nNOT J J\nAND B J\nAND C J\nNOT J J\nAND D J\nWALK\n"),19354928);
-    }
+fn main() {
+    let mut input = String::new();
+    io::stdin().read_to_string(&mut input).unwrap();
+    let program = load_program(input);
+    let part1 = run_program(&program, "NOT A J\nNOT J J\nAND B J\nAND C J\nNOT J J\nAND D J\nWALK\n");
+    let part2 = run_program(&program,"NOT C J\nAND H J\nNOT B T\nOR T J\nNOT A T\nOR T J\nAND D J\nRUN\n");
+    println!("Part 1: {}\nPart 2: {}", part1, part2);
 }

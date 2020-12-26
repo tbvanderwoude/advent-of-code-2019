@@ -72,10 +72,10 @@ mod tests {
 
     #[test]
     fn part_one_test()  {
-        assert_eq!(part_one("data/card_instructions.txt"),5472);
+        assert_eq!(part_one("input/card_instructions.txt"),5472);
     }
     #[test]
     fn alt_shuffle()  {
-        assert_eq!(part_two("data/card_instructions.txt"),64586600795606);
+        assert_eq!(part_two("input/card_instructions.txt"),64586600795606);
     }
 }

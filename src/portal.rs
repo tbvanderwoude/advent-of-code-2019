@@ -206,10 +206,10 @@ mod tests {
     use std::error::Error;
     #[test]
     fn rec() {
-        assert_eq!(run_maze(&"data/portalmaze.txt".to_string(),true),6706);
+        assert_eq!(run_maze(&"input/portalmaze.txt".to_string(),true),6706);
     }
     #[test]
     fn normal() {
-        assert_eq!(run_maze(&"data/portalmaze.txt".to_string(),false),608);
+        assert_eq!(run_maze(&"input/portalmaze.txt".to_string(),false),608);
     }
 }

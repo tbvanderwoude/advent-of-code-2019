@@ -1,9 +1,10 @@
+use std::collections::VecDeque;
 use std::fs;
 use std::io;
+use std::sync::mpsc::{Receiver, Sender};
 
-pub fn load_program(filename: &str) -> Vec<i64> {
-    let contents = fs::read_to_string(filename).expect("Something went wrong reading the file");
-    let split = contents.split(",");
+pub fn load_program(program: String) -> Vec<i64> {
+    let split = program.split(",");
     let mut program: Vec<i64> = vec![];
     for s in split {
         program.push(s.to_string().parse::<i64>().unwrap());
@@ -13,30 +14,71 @@ pub fn load_program(filename: &str) -> Vec<i64> {
     }
     return program;
 }
-
-pub struct DefaultComputer;
-
-impl Computer for DefaultComputer {
+pub struct ChannelComputer {
+    pub receiver: Receiver<i64>,
+    pub sender: Sender<i64>,
+}
+impl ChannelComputer {
+    pub fn new(receiver: Receiver<i64>, sender: Sender<i64>) -> ChannelComputer {
+        ChannelComputer { receiver, sender }
+    }
+}
+impl Computer for ChannelComputer {
+    fn input(&mut self) -> i64 {
+        let mut input: i64 = -1;
+        loop {
+            let result = self.receiver.recv();
+            if result.is_ok() {
+                input = result.unwrap();
+                break;
+            }
+        }
+        input
+    }
+    fn output(&mut self, x: i64) {
+        self.sender.send(x);
+    }
+}
+pub struct TestComputer {
+    input_buffer: VecDeque<i64>,
+    pub output_buffer: Vec<i64>,
+}
+impl TestComputer {
+    pub fn new(input_buffer: VecDeque<i64>) -> TestComputer {
+        TestComputer {
+            input_buffer,
+            output_buffer: vec![],
+        }
+    }
+}
+impl Computer for TestComputer {
+    fn input(&mut self) -> i64 {
+        return self.input_buffer.pop_front().unwrap();
+    }
+    fn output(&mut self, x: i64) {
+        self.output_buffer.push(x);
+    }
+}
+pub struct InteractiveComputer;
+impl Computer for InteractiveComputer {
     fn input(&mut self) -> i64 {
         let mut ret = String::new();
-        match io::stdin().read_line(&mut ret) {
+        return match io::stdin().read_line(&mut ret) {
             Ok(n) => match ret.trim().to_string().parse::<i64>() {
-                Ok(n) => return n,
-                Err(e) => return 0,
+                Ok(n) => n,
+                Err(e) => 0,
             },
-            Err(error) => return 0,
-        }
+            Err(error) => 0,
+        };
     }
     fn output(&mut self, x: i64) {
         println!("{}", x);
     }
 }
-
 pub trait Computer {
     fn input(&mut self) -> i64;
     fn output(&mut self, x: i64);
 }
-
 pub fn run_int_code_on_computer(
     i: &mut usize,
     mem: &mut Vec<i64>,
@@ -58,7 +100,7 @@ pub fn run_int_code_on_computer(
             .chars()
             .map(|x| match x.to_digit(10) {
                 Some(d) => return d as i64,
-                None => return 0
+                None => return 0,
             })
             .collect();
         let len = chars.len();

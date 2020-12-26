@@ -282,7 +282,7 @@ mod tests {
 
     #[test]
     fn test() -> Result<(), Box<dyn Error>> {
-        show_maze(&"data/maze.txt".to_string());
+        show_maze(&"input/maze.txt".to_string());
         Ok(())
     }
     #[test]

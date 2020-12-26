@@ -90,6 +90,6 @@ mod tests {
 
     #[test]
     fn part_one_test()  {
-        println!("{}",view(intcode::load_program("data/intcode/network.txt")));
+        println!("{}",view(intcode::load_program("input/intcode/network.txt")));
     }
 }

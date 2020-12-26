@@ -96,10 +96,10 @@ mod tests {
     use std::error::Error;
     #[test]
     fn run() {
-        assert_eq!(run_program(&"data/intcode/springdroid.txt".to_string(),"NOT C J\nAND H J\nNOT B T\nOR T J\nNOT A T\nOR T J\nAND D J\nRUN\n"),1141997803);
+        assert_eq!(run_program(&"input/intcode/springdroid.txt".to_string(),"NOT C J\nAND H J\nNOT B T\nOR T J\nNOT A T\nOR T J\nAND D J\nRUN\n"),1141997803);
     }
     #[test]
     fn walk() {
-        assert_eq!(run_program(&"data/intcode/springdroid.txt".to_string(),"NOT A J\nNOT J J\nAND B J\nAND C J\nNOT J J\nAND D J\nWALK\n"),19354928);
+        assert_eq!(run_program(&"input/intcode/springdroid.txt".to_string(),"NOT A J\nNOT J J\nAND B J\nAND C J\nNOT J J\nAND D J\nWALK\n"),19354928);
     }
 }

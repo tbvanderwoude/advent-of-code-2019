@@ -102,12 +102,12 @@ fn main() {
 
     let mut counter: usize = 0;
     let mut arcade: Cabinet = Cabinet {
-        autoplay: true,
+        autoplay: false,
         term: Term::stdout(),
         map: HashMap::new(),
         new_x: -42,
         new_y: -42,
-        headless: true,
+        headless: false,
         game_exiting: false,
         score: 0,
         ball_x: -1,

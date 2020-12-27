@@ -20,24 +20,3 @@ modinverse = "0.1.0"
 mod_exp = "1.0.1"
 structopt = "0.3.5"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-[[bin]]
-name = "day01"
-path = "src/bin/day01.rs"
-[[bin]]
-name = "day02"
-path = "src/bin/day02.rs"
-[[bin]]
-name = "day03"
-path = "src/bin/day03.rs"
-[[bin]]
-name = "day04"
-path = "src/bin/day04.rs"
-[[bin]]
-name = "day05"
-path = "src/bin/day05.rs"
-[[bin]]
-name = "day06"
-path = "src/bin/day06.rs"
-[[bin]]
-name = "day07"
-path = "src/bin/day07.rs"

@@ -1,8 +1,11 @@
-use std::fs;
-
+use std::io;
+use std::io::Read;
 
 #[derive(Copy,Clone)]
 pub enum Operation{ Reverse, Increment(i128), Cut(i128)}
+// Computes parameters for inverse mapping of the applied operations.
+// let (increment,offset) = ops_to_inv_func(ops.clone(),len);
+// println!("{} -> {}",5472,(5472*increment+offset).rem_euclid(len));
 pub fn ops_to_inv_func(ops: Vec<Operation>, len: i128) ->(i128,i128)
 {
     let mut offset=0;
@@ -23,35 +26,27 @@ pub fn ops_to_inv_func(ops: Vec<Operation>, len: i128) ->(i128,i128)
     }
     (increment,offset)
 }
-pub fn part_one(filename: &str) -> i128
+pub fn part_one(ops: Vec<Operation>) -> i128
 {
     let len: i128 =10007;
-    let ops = load_instructions(filename);
-    let (a,b) = ops_to_inv_func(ops.clone(),len);
-    println!("Increment: {}, Offset: {}",a,b);
-    println!("{} -> {}",5472,(5472*a+b).rem_euclid(len));
     ops.iter().fold(2019,|pos,&op| match op{
         Operation::Increment(x)=>(pos*x).rem_euclid(len),
         Operation::Cut(x)=>(pos-x).rem_euclid(len),
         Operation::Reverse=>len-1-pos,
     })
 }
-pub fn part_two(filename: &str) ->i128
+pub fn part_two(ops: Vec<Operation>) ->i128
 {
-    let M: i128 =119315717514047;
-    let N: i128 =101741582076661;
-    let ops = load_instructions(filename);
-    let (a,b) = ops_to_inv_func(ops,M);
-    //The nature of these formulae should be looked into later:
-    //https://www.reddit.com/r/adventofcode/comments/ee0rqi/2019_day_22_solutions/fbnkaju/?context=3
-
-    let term1 = 2020 * mod_exp::mod_exp(a, N, M) % M;
-    let tmp = (mod_exp::mod_exp(a, N, M) - 1) * mod_exp::mod_exp(a - 1, M-2, M) % M;
-    let term2 = b * tmp % M;
-    (term1 + term2) % M
+    let m: i128 =119315717514047;
+    let n: i128 =101741582076661;
+    // Should look into modular sometime.
+    let (a,b) = ops_to_inv_func(ops, m);
+    let term1 = 2020 * mod_exp::mod_exp(a, n, m) % m;
+    let tmp = (mod_exp::mod_exp(a, n, m) - 1) * mod_exp::mod_exp(a - 1, m -2, m) % m;
+    let term2 = b * tmp % m;
+    (term1 + term2) % m
 }
-pub fn load_instructions(filename: &str) -> Vec<Operation> {
-    let contents = fs::read_to_string(filename).expect("Something went wrong reading the file");
+pub fn load_instructions(contents: String) -> Vec<Operation> {
     let split = contents.split("\n");
     let mut ops: Vec<Operation> = vec![];
     for s in split {
@@ -66,16 +61,11 @@ pub fn load_instructions(filename: &str) -> Vec<Operation> {
     return ops;
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn part_one_test()  {
-        assert_eq!(part_one("input/card_instructions.txt"),5472);
-    }
-    #[test]
-    fn alt_shuffle()  {
-        assert_eq!(part_two("input/card_instructions.txt"),64586600795606);
-    }
+fn main() {
+    let mut input = String::new();
+    io::stdin().read_to_string(&mut input).unwrap();
+    let operations = load_instructions(input);
+    let part1 = part_one(operations.clone());
+    let part2 = part_two(operations.clone());
+    println!("Part 1: {}\nPart 2: {}", part1, part2);
 }

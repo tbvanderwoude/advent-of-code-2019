@@ -13,6 +13,7 @@ pub struct SpringDroid {
     out_channel: Sender<i64>,
     term: console::Term,
     buffer: Vec<Vec<char>>,
+    silent: bool,
 }
 
 impl SpringDroid {
@@ -40,7 +41,9 @@ impl SpringDroid {
                 } else {
                     let info = (res.unwrap() as u8) as char;
                     if info == '\n' {
-                        println!("{}", stream_buffer.iter().collect::<String>());
+                        if !self.silent {
+                            println!("{}", stream_buffer.iter().collect::<String>());
+                        }
                         stream_buffer.clear();
                     } else {
                         stream_buffer.push(info);
@@ -74,6 +77,7 @@ pub fn run_program(program: &Vec<i64>, prog: &str) -> i64{
         out_channel: main_out,
         term: Term::stdout(),
         buffer: vec![],
+        silent: true,
     };
     let mut comp = ChannelComputer {
         receiver: comp_in,

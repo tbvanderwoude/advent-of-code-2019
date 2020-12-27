@@ -14,6 +14,29 @@ pub fn load_program(program: String) -> Vec<i64> {
     }
     return program;
 }
+pub struct NetworkComputer {
+    pub receiver: Receiver<i64>,
+    pub sender: Sender<i64>,
+}
+impl NetworkComputer {
+    pub fn new(receiver: Receiver<i64>, sender: Sender<i64>) -> NetworkComputer {
+        NetworkComputer { receiver, sender }
+    }
+}
+impl Computer for NetworkComputer {
+    fn input(&mut self) -> i64 {
+        let mut input: i64 = -1;
+        let result = self.receiver.try_recv();
+        if result.is_ok() {
+            input = result.unwrap();
+        }
+        input
+    }
+    fn output(&mut self, x: i64) {
+        self.sender.send(x).unwrap();
+    }
+}
+
 pub struct ChannelComputer {
     pub receiver: Receiver<i64>,
     pub sender: Sender<i64>,

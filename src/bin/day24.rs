@@ -1,3 +1,6 @@
+use std::io;
+use std::io::Read;
+
 mod conway{
     use std::collections::HashSet;
     fn get_bit_xy(str:i32, x:i32, y:i32) -> bool {
@@ -34,10 +37,10 @@ mod conway{
         count
     }
 
-    pub fn simulate_life() ->i32
+    pub fn simulate_life(start_world: i32) ->i32
     {
         let mut world_set:HashSet<i32> = HashSet::new();
-        let mut world:i32= 0b00000001110000001010101110100011;
+        let mut world:i32= start_world;
 
         let mut new_world:i32 = 0;
         loop {
@@ -70,27 +73,6 @@ mod conway{
             }
         }
         return world;
-    }
-    #[cfg(test)]
-    mod tests {
-        use super::*;
-        #[test]
-        fn part_one_test()  {
-            assert_eq!(simulate_life(),18350099);
-        }
-        #[test]
-        fn rem_test()
-        {
-            let mut str:i32= 0b00000001110000001010101110100011;
-            assert_eq!(0b00000001110000001010101110000011,rem_bit_xy(str,0,1,));
-            assert_eq!(0b00000001110000001010101100100011,rem_bit_xy(str,2,1,));
-        }
-        #[test]
-        fn add_test()
-        {
-            assert_eq!(0b00000001110000001010101110100011,set_bit_xy(0b00000001110000001010101110000011,0,1,));
-            assert_eq!(0b00000001110000001010101110100011,rem_bit_xy(0b00000001110000001010101100100011,2,1,));
-        }
     }
 }
 mod eris{
@@ -194,9 +176,9 @@ mod eris{
         }
     }
 
-    pub fn simulate_life() ->i32{
+    pub fn simulate_life(start_world: i32) ->i32{
         let mut eris: Eris = Eris{world_stack: vec![0;400]};
-        eris.world_stack[200]=0b1110000001010101110100011;
+        eris.world_stack[200]=start_world;
         for i in 0..200{
             let mut new_eris = eris.clone();
             for z in 0..400{
@@ -237,29 +219,22 @@ mod eris{
         }
         count
     }
-    #[cfg(test)]
-    mod tests {
-        use super::*;
-        #[test]
-        fn part_two_test()  {
-            assert_eq!(simulate_life(),2037);
-        }
-        #[test]
-        fn neigh_test(){
-            let mut eris: Eris = Eris{world_stack: vec![0;200]};
-            eris.world_stack[1]=0b1111111111110111111111111;
-            assert_eq!(eris.neighbours_xy(0,0,2),2);
-            assert_eq!(eris.neighbours_xy(0,1,2),1);
-            assert_eq!(eris.neighbours_xy(1,0,2),1);
-            assert_eq!(eris.neighbours_xy(1,2,1),3);
-            assert_eq!(eris.neighbours_xy(2,3,1),3);
-        }
-        #[test]
-        fn inner_test() {
-            let mut eris: Eris = Eris{world_stack: vec![0;200]};
-            eris.world_stack[1]=0b1111111111110111111111111;
-            assert_eq!(eris.neighbours_xy(1,2,1),3);
-            assert_eq!(eris.neighbours_xy(2,3,1),3);
+}
+fn parse_world(mut data: String) -> i32{
+    data.retain(|c| !c.is_whitespace());
+    let mut num = 0;
+    for (i,c) in data.chars().enumerate(){
+        if c == '#' {
+            num+=2i32.pow(i as u32);
         }
     }
+    return num;
+}
+fn main() {
+    let mut input = String::new();
+    io::stdin().read_to_string(&mut input).unwrap();
+    let world = parse_world(input);
+    let part1 = conway::simulate_life(world);
+    let part2 = eris::simulate_life(world);
+    println!("Part 1: {}\nPart 2: {}", part1, part2);
 }

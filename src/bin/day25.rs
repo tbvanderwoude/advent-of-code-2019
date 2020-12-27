@@ -1,11 +1,11 @@
 extern crate rand;
 
-use std::sync::mpsc::{channel, Receiver, Sender};
-use std::{thread, io};
-use std::time::Duration;
+use aoc::intcode::{load_program, run_int_code_on_computer, ChannelComputer};
 use console::Term;
-use aoc::intcode::{load_program, ChannelComputer, run_int_code_on_computer};
 use std::io::Read;
+use std::sync::mpsc::{channel, Receiver, Sender};
+use std::time::Duration;
+use std::{io, thread};
 
 pub struct SpringDroid {
     in_channel: Receiver<i64>,
@@ -25,8 +25,8 @@ impl SpringDroid {
         return true;
     }
 
-    fn execute_program(&mut self) -> i64{
-        loop{
+    fn execute_program(&mut self) -> i64 {
+        loop {
             let mut line_buffer: Vec<char> = vec![];
             loop {
                 let res = self.in_channel.recv_timeout(Duration::from_millis(20));
@@ -42,8 +42,7 @@ impl SpringDroid {
                             line_buffer.push(info);
                         }
                     }
-                }
-                else{
+                } else {
                     break;
                 }
             }
@@ -51,7 +50,7 @@ impl SpringDroid {
             loop {
                 let read_char = self.term.read_char().unwrap();
                 chars.push(read_char);
-                if read_char == '\n'{
+                if read_char == '\n' {
                     break;
                 }
             }
@@ -79,15 +78,13 @@ fn main() {
         term: Term::stdout(),
         buffer: vec![],
     };
-    let mut comp = ChannelComputer{receiver: comp_in,sender:comp_out};
+    let mut comp = ChannelComputer {
+        receiver: comp_in,
+        sender: comp_out,
+    };
     thread::spawn(move || {
         let mut iterator = 0;
-        run_int_code_on_computer(
-            &mut iterator,
-            &mut program,
-            &mut comp,
-            false,
-        );
+        run_int_code_on_computer(&mut iterator, &mut program, &mut comp, false);
     });
     explorer.execute_program();
 }

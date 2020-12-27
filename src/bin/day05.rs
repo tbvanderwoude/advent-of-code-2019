@@ -12,7 +12,7 @@ fn run_with_system_id(mem: &Vec<i64>, sys_id: i64) -> i64 {
 fn main() {
     let mut input = String::new();
     io::stdin().read_to_string(&mut input).unwrap();
-    let mut program = load_program(input);
+    let program = load_program(input);
     let part1 = run_with_system_id(&program, 1);
     let part2 = run_with_system_id(&program, 5);
     println!("Part 1: {}\nPart 2: {}", part1, part2);

@@ -1,4 +1,3 @@
-use aoc::common::parse_numbers;
 use std::io;
 use std::io::Read;
 extern crate regex;
@@ -37,8 +36,8 @@ impl Moon {
     }
 }
 
-pub fn full_alignment(mut moons: Vec<Moon>) -> i64 {
-    let mut al = component_wise_alignment(moons);
+pub fn full_alignment(moons: Vec<Moon>) -> i64 {
+    let al = component_wise_alignment(moons);
     return lcm(lcm(al.0, al.1), al.2);
 }
 
@@ -139,9 +138,9 @@ pub fn load_moons(contents: String) -> Vec<Moon> {
 fn main() {
     let mut input = String::new();
     io::stdin().read_to_string(&mut input).unwrap();
-    let mut moons = load_moons(input);
+    let moons = load_moons(input);
     let mut sim_copy = moons.clone();
-    for _ in 0..1000{
+    for _ in 0..1000 {
         simulate_moons(&mut sim_copy);
     }
     let part1: i32 = sim_copy.iter().map(|m| m.compute_energy()).sum();

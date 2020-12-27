@@ -1,8 +1,7 @@
-use aoc::common::parse_numbers;
-use std::io;
-use std::io::Read;
 use std::collections::HashMap;
 use std::hash::Hash;
+use std::io;
+use std::io::Read;
 const TWO_PI: f32 = 2.0f32 * std::f32::consts::PI;
 
 #[derive(PartialEq, Eq, Hash, Copy, Clone)]
@@ -27,8 +26,8 @@ pub fn load_asteroids(contents: String) -> Vec<Asteroid> {
     return asteroids;
 }
 
-pub fn compute_two_hundreth_coord(center: Asteroid,map: HashMap<(i32, i32), Asteroid>) -> i32 {
-    let mut dist_asteroids: Vec<(f32,Asteroid)> = vec![];
+pub fn compute_two_hundreth_coord(center: Asteroid, map: HashMap<(i32, i32), Asteroid>) -> i32 {
+    let mut dist_asteroids: Vec<(f32, Asteroid)> = vec![];
     for (_, asteroid) in map {
         let mut angle: f32 = -(((asteroid.y - center.y) as f32)
             .atan2(-(asteroid.x - center.x) as f32))
@@ -88,10 +87,14 @@ fn main() {
     let mut input = String::new();
     io::stdin().read_to_string(&mut input).unwrap();
     let mut asteroids = load_asteroids(input);
-    let coord = asteroids.iter().enumerate().map(|(i,a)|
-        (i,*a,compute_visible_asteroids(*a,&asteroids))).max_by_key(|t|(*t).2.len()).unwrap();
+    let coord = asteroids
+        .iter()
+        .enumerate()
+        .map(|(i, a)| (i, *a, compute_visible_asteroids(*a, &asteroids)))
+        .max_by_key(|t| (*t).2.len())
+        .unwrap();
     let part1 = coord.2.len();
     asteroids.remove(coord.0);
-    let part2 = compute_two_hundreth_coord(coord.1,coord.2);
+    let part2 = compute_two_hundreth_coord(coord.1, coord.2);
     println!("Part 1: {}\nPart 2: {}", part1, part2);
 }

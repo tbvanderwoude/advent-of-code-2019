@@ -36,7 +36,7 @@ fn main() {
         .split("-")
         .map(|f| f.parse::<i32>().unwrap())
         .collect::<Vec<i32>>();
-    let mut part1 = (spl[0]..spl[1]).filter(|n| valid_code(n, false)).count();
-    let mut part2 = (spl[0]..spl[1]).filter(|n| valid_code(n, true)).count();
+    let part1 = (spl[0]..spl[1]).filter(|n| valid_code(n, false)).count();
+    let part2 = (spl[0]..spl[1]).filter(|n| valid_code(n, true)).count();
     println!("Part 1: {}\nPart 2: {}", part1, part2);
 }

@@ -1,17 +1,9 @@
-use aoc::common::parse_numbers;
 use std::io;
 use std::io::Read;
 
-use std::collections::{BinaryHeap, HashMap};
-use std::hash::Hash;
-use std::time::Duration;
-use std::{fs, thread};
+use std::collections::HashMap;
 
-use petgraph::Graph;
 use queues::*;
-use std::cmp::{min, Ordering};
-use std::fmt::Binary;
-use std::ops::Mul;
 
 #[derive(Clone)]
 pub struct Maze {
@@ -19,7 +11,7 @@ pub struct Maze {
     height: usize,
     map: Vec<Vec<char>>,
     start: (usize, usize),
-    tunnels: HashMap<(usize,usize),(usize,usize)>
+    tunnels: HashMap<(usize, usize), (usize, usize)>,
 }
 
 impl Maze {
@@ -44,9 +36,8 @@ impl Maze {
             println!("{}", self.map[y].iter().collect::<String>());
         }
     }
-    fn has_letter(&self, x:usize, y: usize) ->bool
-    {
-        self.get(x,y) >= 'A'&&self.get(x,y) <= 'Z'
+    fn has_letter(&self, x: usize, y: usize) -> bool {
+        self.get(x, y) >= 'A' && self.get(x, y) <= 'Z'
     }
 
     fn valid(&self, x: usize, y: usize) -> bool {
@@ -71,9 +62,9 @@ pub fn load_maze(contents: String) -> Maze {
         }
         y += 1;
     }
-    let mut x = maze.iter().map(|vec|vec.len()).max().unwrap();
-    for i in 0..maze.len(){
-        while maze[i].len()<x {
+    let x = maze.iter().map(|vec| vec.len()).max().unwrap();
+    for i in 0..maze.len() {
+        while maze[i].len() < x {
             maze[i].push(' ');
         }
     }
@@ -82,18 +73,18 @@ pub fn load_maze(contents: String) -> Maze {
         height: y,
         map: maze,
         start: (0, 0),
-        tunnels: HashMap::new()
+        tunnels: HashMap::new(),
     }
 }
 
-pub fn run_maze(contents: String, recursive: bool) ->usize {
+pub fn run_maze(contents: String, recursive: bool) -> usize {
     let maze: Maze = load_maze(contents);
-    explore_maze(maze,recursive)
+    explore_maze(maze, recursive)
 }
 fn resolve_dist(
-    lineage: &HashMap<(usize, usize,usize), (usize, usize,usize)>,
-    mut node: (usize, usize,usize),
-    start: (usize, usize,usize),
+    lineage: &HashMap<(usize, usize, usize), (usize, usize, usize)>,
+    mut node: (usize, usize, usize),
+    start: (usize, usize, usize),
 ) -> usize {
     let mut dist = 0;
     while lineage.contains_key(&node) && node != start {
@@ -103,95 +94,84 @@ fn resolve_dist(
     dist
 }
 pub fn explore_maze(mut maze: Maze, recursive: bool) -> usize {
-    let mut temp_map: HashMap<String,(usize,usize)> = HashMap::new();
-    let mut start = (0,0);
-    let mut end = (0,0);
-    for y in 1..maze.height{
+    let mut temp_map: HashMap<String, (usize, usize)> = HashMap::new();
+    let mut start = (0, 0);
+    let mut end = (0, 0);
+    for y in 1..maze.height {
         for x in 1..maze.width {
-            if maze.get(x,y)=='.'
-            {
-                for neigh in maze.neighbours(x,y){
-                    if maze.has_letter(neigh.0,neigh.1)
-                    {
+            if maze.get(x, y) == '.' {
+                for neigh in maze.neighbours(x, y) {
+                    if maze.has_letter(neigh.0, neigh.1) {
                         let mut portal_name: String = String::from("");
-                        for letter_neigh in maze.neighbours(neigh.0,neigh.1){
-                            if maze.has_letter(letter_neigh.0,letter_neigh.1)
-                            {
-                                if letter_neigh.0<neigh.0||letter_neigh.1<neigh.1
-                                {
-                                    portal_name.push(maze.get(letter_neigh.0,letter_neigh.1));
-                                    portal_name.push(maze.get(neigh.0,neigh.1));
+                        for letter_neigh in maze.neighbours(neigh.0, neigh.1) {
+                            if maze.has_letter(letter_neigh.0, letter_neigh.1) {
+                                if letter_neigh.0 < neigh.0 || letter_neigh.1 < neigh.1 {
+                                    portal_name.push(maze.get(letter_neigh.0, letter_neigh.1));
+                                    portal_name.push(maze.get(neigh.0, neigh.1));
+                                } else {
+                                    portal_name.push(maze.get(neigh.0, neigh.1));
+                                    portal_name.push(maze.get(letter_neigh.0, letter_neigh.1));
                                 }
-                                else {
-                                    portal_name.push(maze.get(neigh.0,neigh.1));
-                                    portal_name.push(maze.get(letter_neigh.0,letter_neigh.1));
-                                }
-                                maze.set(letter_neigh.0,letter_neigh.1,'#');
+                                maze.set(letter_neigh.0, letter_neigh.1, '#');
                             }
                         }
-                        maze.set(neigh.0,neigh.1,'#');
-                        if portal_name=="AA"
-                        {
-                            start = (x,y);
-                        }
-                        else if portal_name=="ZZ" {
-                            end = (x,y);
-                        }
-                        else if temp_map.contains_key(&portal_name)
-                        {
-                            let other_pos=*temp_map.get(&portal_name).unwrap();
+                        maze.set(neigh.0, neigh.1, '#');
+                        if portal_name == "AA" {
+                            start = (x, y);
+                        } else if portal_name == "ZZ" {
+                            end = (x, y);
+                        } else if temp_map.contains_key(&portal_name) {
+                            let other_pos = *temp_map.get(&portal_name).unwrap();
                             maze.tunnels.insert(other_pos, (x, y));
-                            maze.tunnels.insert( (x, y),other_pos);
-                            let this_norm = (x as i32 - (maze.width/2) as i32).abs()+(y as i32 - (maze.height/2) as i32).abs();
-                            let other_norm =(other_pos.0 as i32 - (maze.width/2) as i32).abs()+(other_pos.1 as i32 - (maze.height/2) as i32).abs();
-                            if this_norm>other_norm{
-                                maze.set(other_pos.0,other_pos.1,'i');
-                                maze.set(x,y,'o');
+                            maze.tunnels.insert((x, y), other_pos);
+                            let this_norm = (x as i32 - (maze.width / 2) as i32).abs()
+                                + (y as i32 - (maze.height / 2) as i32).abs();
+                            let other_norm = (other_pos.0 as i32 - (maze.width / 2) as i32).abs()
+                                + (other_pos.1 as i32 - (maze.height / 2) as i32).abs();
+                            if this_norm > other_norm {
+                                maze.set(other_pos.0, other_pos.1, 'i');
+                                maze.set(x, y, 'o');
+                            } else {
+                                maze.set(other_pos.0, other_pos.1, 'o');
+                                maze.set(x, y, 'i');
                             }
-                            else{
-                                maze.set(other_pos.0,other_pos.1,'o');
-                                maze.set(x,y,'i');
-                            }
-                        }
-                        else
-                        {
-                            temp_map.insert(portal_name,(x,y));
+                        } else {
+                            temp_map.insert(portal_name, (x, y));
                         }
                     }
                 }
             }
         }
     }
-    let mut parent: HashMap<(usize, usize,usize), (usize, usize,usize)> = HashMap::new();
-    let mut q: Queue<(usize, usize,usize)> = Queue::new();
-    q.add((start.0,start.1,0));
+    let mut parent: HashMap<(usize, usize, usize), (usize, usize, usize)> = HashMap::new();
+    let mut q: Queue<(usize, usize, usize)> = Queue::new();
+    q.add((start.0, start.1, 0));
     while q.size() > 0 {
         let node = q.remove().unwrap();
-        if node.2<30
-        {
-            let mut neighbours = maze.neighbours(node.0, node.1);
+        if node.2 < 30 {
+            let neighbours = maze.neighbours(node.0, node.1);
             for (x, y) in neighbours {
-                if !parent.contains_key(&(x, y,node.2)) {
-                    parent.insert((x, y,node.2), node);
-                    q.add((x, y,node.2));
-                    if (!recursive||node.2==0)&&x==end.0&&y==end.1
-                    {
-                        return resolve_dist(&parent,(end.0,end.1,node.2),(start.0,start.1,0));
+                if !parent.contains_key(&(x, y, node.2)) {
+                    parent.insert((x, y, node.2), node);
+                    q.add((x, y, node.2));
+                    if (!recursive || node.2 == 0) && x == end.0 && y == end.1 {
+                        return resolve_dist(
+                            &parent,
+                            (end.0, end.1, node.2),
+                            (start.0, start.1, 0),
+                        );
                     }
                 }
             }
-            if maze.get(node.0,node.1)=='i'
-            {
+            if maze.get(node.0, node.1) == 'i' {
                 let (px, py) = *maze.tunnels.get(&(node.0, node.1)).unwrap();
-                if !parent.contains_key(&(px, py,node.2+1)) {
+                if !parent.contains_key(&(px, py, node.2 + 1)) {
                     parent.insert((px, py, node.2 + 1), node);
                     q.add((px, py, node.2 + 1));
                 }
-            }
-            else if node.2>0&&maze.get(node.0,node.1)=='o'
-            {
+            } else if node.2 > 0 && maze.get(node.0, node.1) == 'o' {
                 let (px, py) = *maze.tunnels.get(&(node.0, node.1)).unwrap();
-                if !parent.contains_key(&(px, py,node.2-1)) {
+                if !parent.contains_key(&(px, py, node.2 - 1)) {
                     parent.insert((px, py, node.2 - 1), node);
                     q.add((px, py, node.2 - 1));
                 }

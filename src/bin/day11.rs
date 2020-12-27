@@ -1,10 +1,8 @@
-use aoc::common::parse_numbers;
+use aoc::intcode;
+use aoc::intcode::{load_program, Computer};
+use std::collections::HashMap;
 use std::io;
 use std::io::Read;
-use std::collections::HashMap;
-use aoc::intcode;
-use aoc::intcode::{Computer, load_program};
-
 
 pub struct Turtle {
     pub dir: i64,

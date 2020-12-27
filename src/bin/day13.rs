@@ -1,13 +1,12 @@
-use aoc::common::parse_numbers;
+use console::Term;
 use std::io;
 use std::io::Read;
-use console::Term;
 
+use aoc::intcode;
+use aoc::intcode::{load_program, Computer};
 use std::collections::HashMap;
 use std::thread;
 use std::time::Duration;
-use aoc::intcode;
-use aoc::intcode::{Computer, load_program};
 
 #[derive(Clone)]
 pub struct Cabinet {
@@ -46,7 +45,7 @@ impl Cabinet {
 
 impl Computer for Cabinet {
     fn input(&mut self) -> i64 {
-        if !self.headless{
+        if !self.headless {
             self.render();
             thread::sleep(Duration::from_millis(20));
         }
@@ -120,7 +119,7 @@ fn main() {
     let part1 = arcade
         .map
         .iter()
-        .map(|(&k, &v)| v)
+        .map(|(&_k, &v)| v)
         .filter(|v| *v == 2)
         .count();
     counter = 0;

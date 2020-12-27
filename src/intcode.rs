@@ -1,5 +1,5 @@
 use std::collections::VecDeque;
-use std::fs;
+
 use std::io;
 use std::sync::mpsc::{Receiver, Sender};
 
@@ -87,11 +87,11 @@ impl Computer for InteractiveComputer {
     fn input(&mut self) -> i64 {
         let mut ret = String::new();
         return match io::stdin().read_line(&mut ret) {
-            Ok(n) => match ret.trim().to_string().parse::<i64>() {
+            Ok(_n) => match ret.trim().to_string().parse::<i64>() {
                 Ok(n) => n,
-                Err(e) => 0,
+                Err(_e) => 0,
             },
-            Err(error) => 0,
+            Err(_error) => 0,
         };
     }
     fn output(&mut self, x: i64) {

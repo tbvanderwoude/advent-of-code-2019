@@ -5,7 +5,7 @@ use std::io::Read;
 fn main() {
     let mut input = String::new();
     io::stdin().read_to_string(&mut input).unwrap();
-    let mut program = load_program(input);
+    let program = load_program(input);
     let mut program_clone = program.clone();
     let mut computer = InteractiveComputer {};
     let mut instr_pointer: usize = 0;

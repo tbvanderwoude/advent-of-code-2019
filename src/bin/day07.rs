@@ -1,11 +1,10 @@
-use aoc::intcode::{load_program, run_int_code_on_computer, ChannelComputer, TestComputer};
+use aoc::intcode::{load_program, run_int_code_on_computer, ChannelComputer};
 use permutohedron;
 use permutohedron::Heap;
-use std::cmp::max;
-use std::fs;
+
 use std::io::Read;
-use std::sync::mpsc::{channel, Receiver, RecvError, Sender};
-use std::{env, io, thread};
+use std::sync::mpsc::{channel, Receiver, Sender};
+use std::{io, thread};
 
 fn simulate_amp_loop(program: &Vec<i64>, has_loop: bool) -> i64 {
     let mut phases: Vec<i64>;
@@ -23,10 +22,10 @@ fn simulate_amp_loop(program: &Vec<i64>, has_loop: bool) -> i64 {
     for permutation in permutations {
         let mut s = 0;
         let (send, receive): (Sender<i64>, Receiver<i64>) = channel();
-        let mut sys_input = send;
+        let sys_input = send;
         sys_input.send(permutation[0] as i64);
         let mut prev_rec = receive;
-        let mut sys_output;
+        let sys_output;
         let mut handles = vec![];
         let n = 5;
         for i in 0..n {

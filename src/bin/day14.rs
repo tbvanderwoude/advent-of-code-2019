@@ -1,9 +1,7 @@
-use aoc::common::parse_numbers;
 use std::io;
 use std::io::Read;
 
 use std::collections::HashMap;
-use std::fs;
 
 use regex::Regex;
 
@@ -33,7 +31,7 @@ pub fn compute_ore_for_fuel(conversions: &HashMap<String, Conversion>, fuel_amou
     let mut result: i64 = 0;
     while !needed.is_empty() {
         let ore = needed.pop().unwrap();
-        let mut produced = 0;
+        let _produced = 0;
         if conversions.contains_key(ore.name.as_str()) {
             let conv = conversions.get(ore.name.as_str()).unwrap();
             let mut in_store: i64 = 0;
@@ -45,7 +43,7 @@ pub fn compute_ore_for_fuel(conversions: &HashMap<String, Conversion>, fuel_amou
                     left.remove(ore.name.as_str());
                 }
             }
-            let mut not_in_store = ore.amount - in_store;
+            let not_in_store = ore.amount - in_store;
 
             let times = (not_in_store as f32 / conv.amount as f32).ceil() as i64;
             for conv_or in &conv.resources {

@@ -1,10 +1,5 @@
-use aoc::intcode::{load_program, run_int_code_on_computer, ChannelComputer, TestComputer};
-use permutohedron;
-use permutohedron::Heap;
-use std::cmp::max;
-use std::fs;
 use std::io::Read;
-use std::sync::mpsc::{channel, Receiver, RecvError, Sender};
+
 use std::{env, io, thread};
 
 pub fn min_zero_code(layers: &Vec<String>) -> i32 {
@@ -39,10 +34,9 @@ pub fn render(layers: &Vec<String>) {
             for layer in layers {
                 let c = layer.chars().nth(y * 25 + x).unwrap();
                 if c != '2' {
-                    if c=='0'{
+                    if c == '0' {
                         print!(".");
-                    }
-                    else{
+                    } else {
                         print!("{}", c);
                     }
                     break;

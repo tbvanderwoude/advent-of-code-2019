@@ -9,7 +9,7 @@ use std::time::Duration;
 
 use console::Term;
 
-use aoc::intcode::{load_program, ChannelComputer, run_int_code_on_computer};
+use aoc::intcode::{load_program, run_int_code_on_computer, ChannelComputer};
 
 pub struct Camera {
     in_channel: Receiver<i64>,
@@ -54,7 +54,7 @@ impl Camera {
                 } else {
                     let info = (res.unwrap() as u8) as char;
                     if info == '\n' {
-                        if !self.headless{
+                        if !self.headless {
                             println!("{}", stream_buffer.iter().collect::<String>());
                         }
                         stream_buffer.clear();
@@ -75,7 +75,7 @@ impl Camera {
             self.out_channel.send(c as i64);
         }
     }
-    fn explore(&mut self) -> usize{
+    fn explore(&mut self) -> usize {
         let mut i = 0;
         let mut final_total = 0;
         self.buffer.push(vec![]);
@@ -85,7 +85,7 @@ impl Camera {
                 let info = (res.unwrap() as u8) as char;
                 if info == '\n' {
                     self.buffer.push(vec![]);
-                    if !self.headless{
+                    if !self.headless {
                         self.render();
                     }
 
@@ -117,8 +117,7 @@ impl Camera {
                     let n = self.buffer.len() - 1;
                     self.buffer[n].push(info);
                 }
-            }
-            else{
+            } else {
                 break;
             }
             i += 1;
@@ -133,10 +132,10 @@ impl Camera {
     }
 }
 
-fn program_camera(mut program: Vec<i64>, part: i64) -> Camera{
+fn program_camera(mut program: Vec<i64>, part: i64) -> Camera {
     let (comp_out, main_in): (Sender<i64>, Receiver<i64>) = channel();
     let (main_out, comp_in): (Sender<i64>, Receiver<i64>) = channel();
-    let mut explorer: Camera = Camera {
+    let explorer: Camera = Camera {
         in_channel: main_in,
         headless: true,
         out_channel: main_out,
@@ -150,12 +149,7 @@ fn program_camera(mut program: Vec<i64>, part: i64) -> Camera{
     };
     thread::spawn(move || {
         let mut iterator = 0;
-        run_int_code_on_computer(
-            &mut iterator,
-            &mut program,
-            &mut comp,
-            false,
-        );
+        run_int_code_on_computer(&mut iterator, &mut program, &mut comp, false);
     });
     explorer
 }
@@ -163,7 +157,7 @@ fn program_camera(mut program: Vec<i64>, part: i64) -> Camera{
 fn main() {
     let mut input = String::new();
     io::stdin().read_to_string(&mut input).unwrap();
-    let mut program = load_program(input);
+    let program = load_program(input);
     let mut cam1 = program_camera(program.clone(), 1);
     let part1 = cam1.explore();
     let mut cam2 = program_camera(program.clone(), 2);

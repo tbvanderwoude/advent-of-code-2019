@@ -1,6 +1,6 @@
 use std::collections::{HashMap, HashSet};
+use std::io;
 use std::io::Read;
-use std::{fs, io};
 
 fn read_orbits(data: String) -> (HashMap<String, String>, HashSet<String>) {
     let mut orbit_map: HashMap<String, String> = HashMap::new();
@@ -35,7 +35,7 @@ fn build_stack(mut planet: String, map: &HashMap<String, String>) -> Vec<String>
     stack
 }
 fn dist_to_santa(data: String) -> i32 {
-    let (map, planets) = read_orbits(data);
+    let (map, _planets) = read_orbits(data);
     let mut santa_stack = build_stack(String::from("SAN"), &map);
     let mut my_stack = build_stack(String::from("YOU"), &map);
     while santa_stack.last().unwrap() == my_stack.last().unwrap() {
@@ -48,7 +48,7 @@ fn main() {
     let mut input = String::new();
     io::stdin().read_to_string(&mut input).unwrap();
 
-    let mut part1 = count_orbits(input.clone());
-    let mut part2 = dist_to_santa(input.clone());
+    let part1 = count_orbits(input.clone());
+    let part2 = dist_to_santa(input.clone());
     println!("Part 1: {}\nPart 2: {}", part1, part2);
 }

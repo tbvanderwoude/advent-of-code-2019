@@ -1,7 +1,5 @@
-use aoc::common::parse_numbers;
 use std::io;
 use std::io::Read;
-use std::fs;
 
 pub fn read_signal(contents: String) -> Vec<i32> {
     contents
@@ -23,11 +21,11 @@ pub fn sample_square(phase_width: i32, mut x: i32) -> i32 {
         0
     } else {
         -1
-    }
+    };
 }
 
 pub fn part_1(mut signal: Vec<i32>) -> String {
-    for i in 0..100 {
+    for _i in 0..100 {
         let old_signal: Vec<i32> = signal.clone();
         for j in 0..old_signal.len() {
             signal[j] = old_signal
@@ -45,11 +43,11 @@ pub fn part_1(mut signal: Vec<i32>) -> String {
         .collect::<String>()
 }
 
-pub fn part_2(mut signal: Vec<i32>) -> String {
+pub fn part_2(signal: Vec<i32>) -> String {
     let n = signal.len();
     let skip: usize = signal.iter().take(7).fold(0, |a, b| a * 10 + *b) as usize;
     let mut long_signal: Vec<i32> = signal.iter().cycle().take(n * 10000).map(|x| *x).collect();
-    for i in 0..100 {
+    for _i in 0..100 {
         for j in (skip..long_signal.len()).rev() {
             if j != long_signal.len() - 1 {
                 long_signal[j] = (long_signal[j] + long_signal[j + 1]) % 10;

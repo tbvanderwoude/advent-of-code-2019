@@ -1,13 +1,12 @@
-use aoc::common::parse_numbers;
 use std::io;
 use std::io::Read;
 extern crate petgraph;
 extern crate rand;
+use aoc::intcode::{load_program, run_int_code_on_computer, ChannelComputer};
+use console::Term;
 use std::collections::HashMap;
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread;
-use console::Term;
-use aoc::intcode::{load_program, run_int_code_on_computer, ChannelComputer};
 
 pub struct Tractor {
     in_channel: Receiver<i64>,
@@ -40,10 +39,10 @@ impl Tractor {
     fn render(&mut self) {
         self.term.clear_screen();
         if !self.map.is_empty() {
-            let max_x = *self.map.keys().map(|(a, b)| a).max().unwrap();
-            let max_y = *self.map.keys().map(|(a, b)| b).max().unwrap();
-            let min_x = *self.map.keys().map(|(a, b)| a).min().unwrap();
-            let min_y = *self.map.keys().map(|(a, b)| b).min().unwrap();
+            let max_x = *self.map.keys().map(|(a, _b)| a).max().unwrap();
+            let max_y = *self.map.keys().map(|(_a, b)| b).max().unwrap();
+            let min_x = *self.map.keys().map(|(a, _b)| a).min().unwrap();
+            let min_y = *self.map.keys().map(|(_a, b)| b).min().unwrap();
             let w = (max_x - min_x) as usize;
             for y in min_y..max_y {
                 let mut line: Vec<char> = vec![' '; w + 2];
@@ -81,22 +80,17 @@ pub fn deploy(mut program: Vec<i64>, x: i64, y: i64) -> i64 {
     };
     thread::spawn(move || {
         let mut iterator = 0;
-        run_int_code_on_computer(
-            &mut iterator,
-            &mut program,
-            &mut comp,
-            false,
-        );
+        run_int_code_on_computer(&mut iterator, &mut program, &mut comp, false);
     });
 
     explorer.explore()
 }
 
-fn check(mut program: Vec<i64>, cursor_x: i64, cursor_y: i64) -> bool {
+fn check(program: Vec<i64>, cursor_x: i64, cursor_y: i64) -> bool {
     deploy(program.clone(), cursor_x, cursor_y) == 1
 }
 
-fn vert_fits(mut program: Vec<i64>, cursor_x: i64, cursor_y: i64) -> bool {
+fn vert_fits(program: Vec<i64>, cursor_x: i64, cursor_y: i64) -> bool {
     let mut y_fits = true;
     for y in cursor_y..(cursor_y + 100) {
         let res = deploy(program.clone(), cursor_x, y);
@@ -110,17 +104,17 @@ fn vert_fits(mut program: Vec<i64>, cursor_x: i64, cursor_y: i64) -> bool {
 
 fn check_beam_start(program: &Vec<i64>) -> usize {
     let mut count = 0;
-    for x in 0..50{
-        for y in 0..50{
-            if check(program.clone(),x,y){
-                count+=1;
+    for x in 0..50 {
+        for y in 0..50 {
+            if check(program.clone(), x, y) {
+                count += 1;
             }
         }
     }
     return count;
 }
 
-pub fn fit_rectangle(program: &Vec<i64>) -> i64{
+pub fn fit_rectangle(program: &Vec<i64>) -> i64 {
     let mut cursor_x = 0;
     let mut cursor_y = 10;
     let size = 100;

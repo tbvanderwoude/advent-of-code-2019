@@ -3,6 +3,7 @@ use std::io;
 use std::sync::mpsc::{Receiver, Sender};
 
 use crate::intcode::Computer;
+use std::time::Duration;
 
 pub struct TextInterface{
     pub in_channel: Receiver<i64>,
@@ -30,7 +31,7 @@ impl TextInterface {
         self.buffer.push(vec![]);
         let mut retval = -1;
         loop {
-            let res = self.in_channel.recv();
+            let res =  self.in_channel.recv_timeout(Duration::from_millis(10));
             if res.is_ok() {
                 if res.unwrap()>255{
                     retval = res.unwrap();

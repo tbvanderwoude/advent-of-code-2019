@@ -7,48 +7,26 @@ use std::time::Duration;
 
 use console::Term;
 
-use aoc::computer::ChannelComputer;
+use aoc::computer::{ChannelComputer, TextInterface};
 use aoc::intcode::{load_program, run_int_code_on_computer};
 
-pub struct SpringDroid {
-    in_channel: Receiver<i64>,
-    out_channel: Sender<i64>,
+pub struct Droid {
+    text_inter: TextInterface,
     term: console::Term,
-    buffer: Vec<Vec<char>>,
 }
 
-impl SpringDroid {
-    fn lookup(&self, x: i32, y: i32) -> bool {
-        if (y < 0 || y >= self.buffer.len() as i32)
-            || (x < 0 || x >= self.buffer[y as usize].len() as i32)
-            || (self.buffer[y as usize][x as usize] == '.')
-        {
-            return false;
-        }
-        return true;
+impl Droid {
+    fn string_from_buffer(&self) -> Vec<String>{
+        let mut strings = vec![];
+        for v in self.text_inter.buffer{
+            strings.push(v.iter().collect::<String>());
+        };
+        return strings;
     }
-
     fn execute_program(&mut self) -> i64 {
         loop {
-            let mut line_buffer: Vec<char> = vec![];
-            loop {
-                let res = self.in_channel.recv_timeout(Duration::from_millis(20));
-                if res.is_ok() {
-                    if res.unwrap() > 255 {
-                        return res.unwrap();
-                    } else {
-                        let info = (res.unwrap() as u8) as char;
-                        if info == '\n' {
-                            println!("{}", line_buffer.iter().collect::<String>());
-                            line_buffer.clear();
-                        } else {
-                            line_buffer.push(info);
-                        }
-                    }
-                } else {
-                    break;
-                }
-            }
+            self.text_inter.buffered_reading();
+            self.text_inter.render();
             let mut chars = vec![];
             loop {
                 let read_char = self.term.read_char().unwrap();
@@ -59,12 +37,7 @@ impl SpringDroid {
             }
             self.term.clear_screen();
             thread::sleep(Duration::from_millis(16));
-            self.upload_string(chars.into_iter().collect());
-        }
-    }
-    fn upload_string(&self, string: String) {
-        for c in string.chars() {
-            self.out_channel.send(c as i64);
+            self.text_inter.upload_string(chars.into_iter().collect::<String>().as_str());
         }
     }
 }
@@ -75,11 +48,14 @@ fn main() {
     let mut program = load_program(input);
     let (comp_out, main_in): (Sender<i64>, Receiver<i64>) = channel();
     let (main_out, comp_in): (Sender<i64>, Receiver<i64>) = channel();
-    let mut explorer: SpringDroid = SpringDroid {
+    let inter = TextInterface{
         in_channel: main_in,
         out_channel: main_out,
-        term: Term::stdout(),
         buffer: vec![],
+    };
+    let mut explorer: Droid = Droid {
+        text_inter: inter,
+        term: Term::stdout(),
     };
     let mut comp = ChannelComputer {
         receiver: comp_in,

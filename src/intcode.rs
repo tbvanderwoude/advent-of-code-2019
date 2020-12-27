@@ -1,5 +1,4 @@
 use std::collections::VecDeque;
-
 use std::io;
 use std::sync::mpsc::{Receiver, Sender};
 
@@ -14,90 +13,7 @@ pub fn load_program(program: String) -> Vec<i64> {
     }
     return program;
 }
-pub struct NetworkComputer {
-    pub receiver: Receiver<i64>,
-    pub sender: Sender<i64>,
-}
-impl NetworkComputer {
-    pub fn new(receiver: Receiver<i64>, sender: Sender<i64>) -> NetworkComputer {
-        NetworkComputer { receiver, sender }
-    }
-}
-impl Computer for NetworkComputer {
-    fn input(&mut self) -> i64 {
-        let mut input: i64 = -1;
-        let result = self.receiver.try_recv();
-        if result.is_ok() {
-            input = result.unwrap();
-        }
-        input
-    }
-    fn output(&mut self, x: i64) {
-        self.sender.send(x).unwrap();
-    }
-}
 
-pub struct ChannelComputer {
-    pub receiver: Receiver<i64>,
-    pub sender: Sender<i64>,
-}
-impl ChannelComputer {
-    pub fn new(receiver: Receiver<i64>, sender: Sender<i64>) -> ChannelComputer {
-        ChannelComputer { receiver, sender }
-    }
-}
-impl Computer for ChannelComputer {
-    fn input(&mut self) -> i64 {
-        let mut input: i64 = -1;
-        loop {
-            let result = self.receiver.recv();
-            if result.is_ok() {
-                input = result.unwrap();
-                break;
-            }
-        }
-        input
-    }
-    fn output(&mut self, x: i64) {
-        self.sender.send(x);
-    }
-}
-pub struct TestComputer {
-    input_buffer: VecDeque<i64>,
-    pub output_buffer: Vec<i64>,
-}
-impl TestComputer {
-    pub fn new(input_buffer: VecDeque<i64>) -> TestComputer {
-        TestComputer {
-            input_buffer,
-            output_buffer: vec![],
-        }
-    }
-}
-impl Computer for TestComputer {
-    fn input(&mut self) -> i64 {
-        return self.input_buffer.pop_front().unwrap();
-    }
-    fn output(&mut self, x: i64) {
-        self.output_buffer.push(x);
-    }
-}
-pub struct InteractiveComputer;
-impl Computer for InteractiveComputer {
-    fn input(&mut self) -> i64 {
-        let mut ret = String::new();
-        return match io::stdin().read_line(&mut ret) {
-            Ok(_n) => match ret.trim().to_string().parse::<i64>() {
-                Ok(n) => n,
-                Err(_e) => 0,
-            },
-            Err(_error) => 0,
-        };
-    }
-    fn output(&mut self, x: i64) {
-        println!("{}", x);
-    }
-}
 pub trait Computer {
     fn input(&mut self) -> i64;
     fn output(&mut self, x: i64);

@@ -1,6 +1,8 @@
-use aoc::intcode::{load_program, run_int_code_on_computer, InteractiveComputer};
 use std::io;
 use std::io::Read;
+
+use aoc::computer::InteractiveComputer;
+use aoc::intcode::{load_program, run_int_code_on_computer};
 
 fn main() {
     let mut input = String::new();

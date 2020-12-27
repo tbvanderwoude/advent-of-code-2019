@@ -1,6 +1,8 @@
-use aoc::intcode::{load_program, run_int_code_on_computer, TestComputer};
 use std::io;
 use std::io::Read;
+
+use aoc::computer::TestComputer;
+use aoc::intcode::{load_program, run_int_code_on_computer};
 
 fn run_with_system_id(mem: &Vec<i64>, sys_id: i64) -> i64 {
     let mut program_clone = mem.clone();

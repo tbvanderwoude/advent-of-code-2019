@@ -1,81 +1,34 @@
 use std::io;
 use std::io::Read;
-extern crate rand;
-use aoc::intcode::{load_program, run_int_code_on_computer, ChannelComputer};
-use console::Term;
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread;
 use std::time::Duration;
 
+use console::Term;
+
+use aoc::computer::{ChannelComputer, TextInterface};
+use aoc::intcode::{load_program, run_int_code_on_computer};
+
+extern crate rand;
+
 pub struct SpringDroid {
-    in_channel: Receiver<i64>,
-    out_channel: Sender<i64>,
-    term: console::Term,
-    buffer: Vec<Vec<char>>,
-    silent: bool,
+    text_inter: TextInterface
 }
 
 impl SpringDroid {
-    fn lookup(&self, x: i32, y: i32) -> bool {
-        if (y < 0 || y >= self.buffer.len() as i32)
-            || (x < 0 || x >= self.buffer[y as usize].len() as i32)
-            || (self.buffer[y as usize][x as usize] == '.')
-        {
-            return false;
-        }
-        return true;
-    }
-
     fn execute_program(&mut self, program: &str) -> i64 {
-        let _i = 0;
-        self.upload_string(program);
-
-        self.buffer.push(vec![]);
-        let mut stream_buffer: Vec<char> = vec![];
-        loop {
-            let res = self.in_channel.recv_timeout(Duration::from_millis(5000));
-            if res.is_ok() {
-                if res.unwrap() > 255 {
-                    return res.unwrap();
-                } else {
-                    let info = (res.unwrap() as u8) as char;
-                    if info == '\n' {
-                        if !self.silent {
-                            println!("{}", stream_buffer.iter().collect::<String>());
-                        }
-                        stream_buffer.clear();
-                    } else {
-                        stream_buffer.push(info);
-                    }
-                }
-            } else {
-                break;
-            }
-        }
-        return 0;
-    }
-    fn upload_string(&self, string: &str) {
-        for c in string.chars() {
-            self.out_channel.send(c as i64);
-        }
-    }
-    fn render(&self) {
-        self.term.clear_screen();
-        for line in &self.buffer {
-            println!("{}", line.iter().collect::<String>());
-        }
+        self.text_inter.upload_string(program);
+        return self.text_inter.buffered_reading();
     }
 }
 
 pub fn run_program(program: &Vec<i64>, prog: &str) -> i64 {
     let (comp_out, main_in): (Sender<i64>, Receiver<i64>) = channel();
     let (main_out, comp_in): (Sender<i64>, Receiver<i64>) = channel();
-    let mut explorer: SpringDroid = SpringDroid {
+    let mut interface: TextInterface = TextInterface{
         in_channel: main_in,
         out_channel: main_out,
-        term: Term::stdout(),
         buffer: vec![],
-        silent: true,
     };
     let mut comp = ChannelComputer {
         receiver: comp_in,
@@ -86,7 +39,8 @@ pub fn run_program(program: &Vec<i64>, prog: &str) -> i64 {
         let mut iterator = 0;
         run_int_code_on_computer(&mut iterator, &mut cln, &mut comp, false);
     });
-    explorer.execute_program(prog)
+    interface.upload_string(prog);
+    interface.buffered_reading()
 }
 
 fn main() {

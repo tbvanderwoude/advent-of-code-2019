@@ -1,12 +1,16 @@
+use std::collections::HashMap;
 use std::io;
 use std::io::Read;
-extern crate petgraph;
-extern crate rand;
-use aoc::intcode::{load_program, run_int_code_on_computer, ChannelComputer};
-use console::Term;
-use std::collections::HashMap;
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread;
+
+use console::Term;
+
+use aoc::computer::ChannelComputer;
+use aoc::intcode::{load_program, run_int_code_on_computer};
+
+extern crate petgraph;
+extern crate rand;
 
 pub struct Tractor {
     in_channel: Receiver<i64>,

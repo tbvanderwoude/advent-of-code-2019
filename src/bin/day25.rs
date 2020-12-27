@@ -1,11 +1,14 @@
 extern crate rand;
 
-use aoc::intcode::{load_program, run_int_code_on_computer, ChannelComputer};
-use console::Term;
+use std::{io, thread};
 use std::io::Read;
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::time::Duration;
-use std::{io, thread};
+
+use console::Term;
+
+use aoc::computer::ChannelComputer;
+use aoc::intcode::{load_program, run_int_code_on_computer};
 
 pub struct SpringDroid {
     in_channel: Receiver<i64>,

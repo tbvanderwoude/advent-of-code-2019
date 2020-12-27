@@ -1,11 +1,12 @@
 extern crate petgraph;
 extern crate rand;
 
-use std::sync::mpsc::{channel, Receiver, Sender};
 use std::{io, thread};
-
-use aoc::intcode::{load_program, run_int_code_on_computer, NetworkComputer};
 use std::io::Read;
+use std::sync::mpsc::{channel, Receiver, Sender};
+
+use aoc::computer::NetworkComputer;
+use aoc::intcode::{load_program, run_int_code_on_computer};
 
 fn main() {
     let mut input = String::new();

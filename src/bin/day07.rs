@@ -1,10 +1,12 @@
-use aoc::intcode::{load_program, run_int_code_on_computer, ChannelComputer};
+use std::{io, thread};
+use std::io::Read;
+use std::sync::mpsc::{channel, Receiver, Sender};
+
 use permutohedron;
 use permutohedron::Heap;
 
-use std::io::Read;
-use std::sync::mpsc::{channel, Receiver, Sender};
-use std::{io, thread};
+use aoc::computer::ChannelComputer;
+use aoc::intcode::{load_program, run_int_code_on_computer};
 
 fn simulate_amp_loop(program: &Vec<i64>, has_loop: bool) -> i64 {
     let mut phases: Vec<i64>;

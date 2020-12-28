@@ -22,7 +22,7 @@ impl TextInterface {
     }
     pub fn upload_string(&self, string: &str) {
         for c in string.chars() {
-            self.out_channel.send(c as i64).unwrap();
+            self.out_channel.send(c as i64);
         }
     }
     pub fn buffered_reading(&mut self) -> i64
@@ -31,7 +31,7 @@ impl TextInterface {
         self.buffer.push(vec![]);
         let mut retval = -1;
         loop {
-            let res =  self.in_channel.recv_timeout(Duration::from_millis(10));
+            let res =  self.in_channel.recv_timeout(Duration::from_millis(20));
             if res.is_ok() {
                 if res.unwrap()>255{
                     retval = res.unwrap();
@@ -108,7 +108,7 @@ impl Computer for ChannelComputer {
         input
     }
     fn output(&mut self, x: i64) {
-        self.sender.send(x).unwrap();
+        self.sender.send(x);
     }
 }
 

@@ -1,6 +1,6 @@
-use std::{io, thread};
 use std::io::Read;
 use std::sync::mpsc::{channel, Receiver, Sender};
+use std::{io, thread};
 
 use permutohedron;
 use permutohedron::Heap;

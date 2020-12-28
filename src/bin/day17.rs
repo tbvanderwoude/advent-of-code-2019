@@ -18,7 +18,7 @@ impl Camera {
             c != '.'
         } else {
             false
-        }
+        };
     }
 
     fn command(&mut self) -> i64 {
@@ -41,7 +41,7 @@ impl Camera {
             for x in 0..self.text_inter.buffer[y].len() {
                 if self.text_inter.buffer[y as usize][x as usize] != '.' {
                     let mut neighbours = 0;
-                    if x>0 && self.lookup(x as i32 - 1, y as i32) {
+                    if x > 0 && self.lookup(x as i32 - 1, y as i32) {
                         neighbours += 1;
                     }
                     if self.lookup(x as i32 + 1, y as i32) {
@@ -66,7 +66,7 @@ impl Camera {
 fn program_camera(mut program: Vec<i64>, part: i64) -> Camera {
     let (comp_out, main_in): (Sender<i64>, Receiver<i64>) = channel();
     let (main_out, comp_in): (Sender<i64>, Receiver<i64>) = channel();
-    let interface: TextInterface = TextInterface{
+    let interface: TextInterface = TextInterface {
         in_channel: main_in,
         out_channel: main_out,
         buffer: vec![],

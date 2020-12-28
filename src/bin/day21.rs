@@ -2,9 +2,9 @@ use std::io;
 use std::io::Read;
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread;
-use std::time::Duration;
 
-use console::Term;
+
+
 
 use aoc::computer::{ChannelComputer, TextInterface};
 use aoc::intcode::{load_program, run_int_code_on_computer};
@@ -12,7 +12,7 @@ use aoc::intcode::{load_program, run_int_code_on_computer};
 extern crate rand;
 
 pub struct SpringDroid {
-    text_inter: TextInterface
+    text_inter: TextInterface,
 }
 
 impl SpringDroid {
@@ -25,7 +25,7 @@ impl SpringDroid {
 pub fn run_program(program: &Vec<i64>, prog: &str) -> i64 {
     let (comp_out, main_in): (Sender<i64>, Receiver<i64>) = channel();
     let (main_out, comp_in): (Sender<i64>, Receiver<i64>) = channel();
-    let mut interface: TextInterface = TextInterface{
+    let mut interface: TextInterface = TextInterface {
         in_channel: main_in,
         out_channel: main_out,
         buffer: vec![],

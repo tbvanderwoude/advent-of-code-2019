@@ -5,10 +5,10 @@ use std::sync::mpsc::{Receiver, Sender};
 use crate::intcode::Computer;
 use std::time::Duration;
 
-pub struct TextInterface{
+pub struct TextInterface {
     pub in_channel: Receiver<i64>,
     pub out_channel: Sender<i64>,
-    pub buffer: Vec<Vec<char>>
+    pub buffer: Vec<Vec<char>>,
 }
 
 impl TextInterface {
@@ -25,18 +25,16 @@ impl TextInterface {
             self.out_channel.send(c as i64);
         }
     }
-    pub fn buffered_reading(&mut self) -> i64
-    {
+    pub fn buffered_reading(&mut self) -> i64 {
         self.buffer.clear();
         self.buffer.push(vec![]);
         let mut retval = -1;
         loop {
-            let res =  self.in_channel.recv_timeout(Duration::from_millis(20));
+            let res = self.in_channel.recv_timeout(Duration::from_millis(20));
             if res.is_ok() {
-                if res.unwrap()>255{
+                if res.unwrap() > 255 {
                     retval = res.unwrap();
-                }
-                else{
+                } else {
                     let info = (res.unwrap() as u8) as char;
                     if info == '\n' {
                         self.buffer.push(vec![]);
@@ -45,7 +43,6 @@ impl TextInterface {
                         self.buffer[n].push(info);
                     }
                 }
-
             } else {
                 break;
             }

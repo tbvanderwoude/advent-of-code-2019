@@ -1,9 +1,9 @@
 extern crate petgraph;
 extern crate rand;
 
-use std::{io, thread};
 use std::io::Read;
 use std::sync::mpsc::{channel, Receiver, Sender};
+use std::{io, thread};
 
 use aoc::computer::NetworkComputer;
 use aoc::intcode::{load_program, run_int_code_on_computer};
